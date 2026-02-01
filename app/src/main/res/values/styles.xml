@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="BottomRoundedImage">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeBottomLeft">25dp</item>
+        <item name="cornerSizeBottomRight">25dp</item>
+        <item name="cornerSizeTopLeft">0dp</item>
+        <item name="cornerSizeTopRight">0dp</item>
+    </style>
+
+    <style name="TopRoundedImage">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopLeft">24dp</item>
+        <item name="cornerSizeTopRight">24dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+    </style>
+
+<!--    <style name="SearchBarShape">-->
+<!--        <item name="cornerFamily">rounded</item>-->
+<!--        <item name="cornerSize">20dp</item>-->
+<!--    </style>-->
+
+<!--    <style name="Widget.MealMatch.SearchBar" parent="Widget.Material3.SearchBar">-->
+
+<!--        &lt;!&ndash; Icon color &ndash;&gt;-->
+<!--        <item name="navigationIconTint">@color/gray_400</item>-->
+
+<!--        &lt;!&ndash; IMPORTANT: equal vertical padding &ndash;&gt;-->
+<!--        <item name="contentPaddingTop">15dp</item>-->
+<!--        <item name="contentPaddingBottom">12dp</item>-->
+
+<!--        &lt;!&ndash; Horizontal padding &ndash;&gt;-->
+<!--        <item name="contentPaddingStart">20dp</item>-->
+<!--        <item name="contentPaddingEnd">20dp</item>-->
+
+<!--        &lt;!&ndash; Hint & text color &ndash;&gt;-->
+<!--        <item name="android:textColorHint">@color/gray_400</item>-->
+<!--        <item name="android:textColor">@color/gray_400</item>-->
+
+<!--    </style>-->
+
+
+</resources>

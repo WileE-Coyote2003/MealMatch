@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Hovered (mouse / trackpad) -->
+    <item
+        android:state_hovered="true"
+        android:color="#80FFFFFF" />
+
+    <!-- Pressed (touch) -->
+    <item
+        android:state_pressed="true"
+        android:color="#80FFFFFF" />
+
+    <!-- Default (not hovered) -->
+    <item
+        android:color="#4DFFFFFF" />
+</selector>
