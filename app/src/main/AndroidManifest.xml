@@ -28,11 +28,6 @@
             android:name=".SignUpActivity"
             android:exported="false" />
 
-        <!-- Main screen (home, after login) -->
-        <activity
-            android:name=".MainActivity"
-            android:exported="false" />
-
     </application>
 
 </manifest>

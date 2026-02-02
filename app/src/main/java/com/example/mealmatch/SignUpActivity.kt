@@ -12,8 +12,6 @@ class SignUpActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // ✅ Load SIGN UP layout
         setContentView(R.layout.activity_sign_up)
 
         val loginText = findViewById<TextView>(R.id.sign_in_text) // "Log in"
@@ -24,13 +22,10 @@ class SignUpActivity : AppCompatActivity() {
         val passBox = findViewById<EditText>(R.id.password_box)
         val rePassBox = findViewById<EditText>(R.id.re_password_box)
 
-        // 🔹 Go back to Login
         loginText.setOnClickListener {
-            startActivity(Intent(this, LoginActivity::class.java))
-            finish()
+            finish() // just go back to LoginActivity (cleaner)
         }
 
-        // 🔹 Sign Up button
         signUpBtn.setOnClickListener {
             val name = nameBox.text.toString().trim()
             val email = emailBox.text.toString().trim()
@@ -50,8 +45,7 @@ class SignUpActivity : AppCompatActivity() {
 
             Toast.makeText(this, "Account created", Toast.LENGTH_SHORT).show()
 
-            // After signup → back to login
-            startActivity(Intent(this, LoginActivity::class.java))
+            // After signup go back to login screen
             finish()
         }
     }

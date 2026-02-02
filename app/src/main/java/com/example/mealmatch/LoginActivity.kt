@@ -12,8 +12,6 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // ✅ Load LOGIN layout
         setContentView(R.layout.activity_login)
 
         val signUpText = findViewById<TextView>(R.id.sign_in_text) // "Sign Up"
@@ -23,17 +21,14 @@ class LoginActivity : AppCompatActivity() {
         val emailBox = findViewById<EditText>(R.id.email_box)
         val passwordBox = findViewById<EditText>(R.id.password_box)
 
-        // 🔹 Go to Sign Up
         signUpText.setOnClickListener {
             startActivity(Intent(this, SignUpActivity::class.java))
         }
 
-        // 🔹 Back arrow
         backText.setOnClickListener {
             finish()
         }
 
-        // 🔹 Login button (dummy for now)
         loginBtn.setOnClickListener {
             val email = emailBox.text.toString().trim()
             val password = passwordBox.text.toString().trim()
@@ -52,8 +47,8 @@ class LoginActivity : AppCompatActivity() {
 
             Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show()
 
-            // Later → go to MainActivity
-            // startActivity(Intent(this, MainActivity::class.java))
+            // Example after real login:
+            // startActivity(Intent(this, HomeActivity::class.java))
             // finish()
         }
     }
