@@ -30,7 +30,11 @@ android {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
-    kotlinOptions { jvmTarget = "1.8" }
+
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+
 
     buildFeatures { viewBinding = true }
 }
@@ -41,13 +45,9 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.11.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-
-    // ✅ Use ONLY ONE activity dependency (ktx already includes activity)
+    
     implementation("androidx.activity:activity-ktx:1.8.2")
-    // ❌ REMOVE this (forces SDK 36 / AGP 8.9.1)
-    // implementation("androidx.activity:activity:1.12.3")
 
-    // ✅ Safe versions (your current ones are too new)
     implementation("androidx.annotation:annotation:1.7.1")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.2")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2")
