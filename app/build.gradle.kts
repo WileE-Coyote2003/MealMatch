@@ -5,15 +5,14 @@ plugins {
 
 android {
     namespace = "com.example.mealmatch"
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.example.mealmatch"
         minSdk = 24
-        targetSdk = 33
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -26,22 +25,44 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
+    kotlinOptions { jvmTarget = "1.8" }
+
+    buildFeatures { viewBinding = true }
 }
 
 dependencies {
+    // ✅ Compatible with compileSdk 34 + AGP 8.1.2
+    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("com.google.android.material:material:1.11.0")
+    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
 
-    implementation("androidx.core:core-ktx:1.9.0")
-    implementation("androidx.appcompat:appcompat:1.7.1")
-    implementation("com.google.android.material:material:1.13.0")
-    implementation("androidx.constraintlayout:constraintlayout:2.2.1")
+    // ✅ Use ONLY ONE activity dependency (ktx already includes activity)
+    implementation("androidx.activity:activity-ktx:1.8.2")
+    // ❌ REMOVE this (forces SDK 36 / AGP 8.9.1)
+    // implementation("androidx.activity:activity:1.12.3")
+
+    // ✅ Safe versions (your current ones are too new)
+    implementation("androidx.annotation:annotation:1.7.1")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.2")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2")
+
     testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.3.0")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+}
+
+// ✅ Prevent Gradle from silently upgrading to 1.12.x / 1.16.x
+configurations.all {
+    resolutionStrategy {
+        force("androidx.activity:activity-ktx:1.8.2")
+        force("androidx.activity:activity:1.8.2")
+        force("androidx.core:core-ktx:1.12.0")
+        force("androidx.core:core:1.12.0")
+    }
 }
