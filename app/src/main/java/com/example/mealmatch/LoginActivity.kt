@@ -2,8 +2,10 @@ package com.example.mealmatch
 
 import android.content.Intent
 import android.os.Bundle
+import android.text.InputType
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -21,6 +23,7 @@ class LoginActivity : AppCompatActivity() {
         val emailBox = findViewById<EditText>(R.id.email_box)
         val passwordBox = findViewById<EditText>(R.id.password_box)
 
+        val eyeBtn = findViewById<ImageView>(R.id.eye_btn)
         signUpText.setOnClickListener {
             startActivity(Intent(this, SignUpActivity::class.java))
         }
@@ -50,6 +53,28 @@ class LoginActivity : AppCompatActivity() {
             // Example after real login:
             // startActivity(Intent(this, HomeActivity::class.java))
             // finish()
+        }
+
+        var isPasswordVisible = false
+        eyeBtn.setImageResource(R.drawable.eye_ic)
+
+        eyeBtn.setOnClickListener {
+            isPasswordVisible = !isPasswordVisible
+
+            if (isPasswordVisible) {
+                // Show password + show "eye" icon
+                passwordBox.inputType =
+                    InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                eyeBtn.setImageResource(R.drawable.ic_eye_off)
+            } else {
+                // Hide password + show "eye-off" icon
+                passwordBox.inputType =
+                    InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+                eyeBtn.setImageResource(R.drawable.eye_ic)
+            }
+
+            // keep cursor at end
+            passwordBox.setSelection(passwordBox.text.length)
         }
     }
 }

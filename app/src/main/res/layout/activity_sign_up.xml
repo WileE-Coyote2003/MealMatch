@@ -53,7 +53,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
-        <!-- ✅ Full Name box (icon + edittext) -->
+        <!-- Full Name row -->
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/name_row"
             android:layout_width="0dp"
@@ -68,8 +68,9 @@
                 android:id="@+id/name_icon"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
+                android:layout_marginStart="12dp"
+                android:contentDescription="icon_name"
                 android:src="@drawable/account_circle"
-                android:contentDescription="name_icon"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent" />
@@ -79,16 +80,16 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
+                android:layout_marginEnd="12dp"
                 android:hint="@string/enter_your_name"
                 android:inputType="textPersonName"
+                android:autofillHints="name"
                 android:background="@null"
                 android:textSize="16sp"
                 android:textColor="@android:color/black"
                 android:textColorHint="#757575"
-                android:minHeight="40dp"
-                android:paddingVertical="0dp"
+                android:minHeight="48dp"
                 android:gravity="center_vertical"
-                android:autofillHints="name"
                 app:layout_constraintStart_toEndOf="@id/name_icon"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
@@ -109,7 +110,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
-        <!-- ✅ Email box -->
+        <!-- Email row -->
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/email_row"
             android:layout_width="0dp"
@@ -124,8 +125,9 @@
                 android:id="@+id/email_icon"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
+                android:layout_marginStart="12dp"
+                android:contentDescription="@string/icon_email"
                 android:src="@drawable/ic_email"
-                android:contentDescription="email_icon"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent" />
@@ -135,16 +137,16 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
+                android:layout_marginEnd="12dp"
                 android:hint="@string/email_hint"
                 android:inputType="textEmailAddress"
+                android:autofillHints="emailAddress"
                 android:background="@null"
                 android:textSize="16sp"
                 android:textColor="@android:color/black"
                 android:textColorHint="#757575"
-                android:minHeight="40dp"
-                android:paddingVertical="0dp"
+                android:minHeight="48dp"
                 android:gravity="center_vertical"
-                android:autofillHints="emailAddress"
                 app:layout_constraintStart_toEndOf="@id/email_icon"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
@@ -165,7 +167,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
-        <!-- ✅ Password box -->
+        <!-- Password row (lock + edit + eye) -->
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/password_row"
             android:layout_width="0dp"
@@ -180,9 +182,26 @@
                 android:id="@+id/password_icon"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
+                android:layout_marginStart="12dp"
+                android:contentDescription="@string/icon_password"
                 android:src="@drawable/ic_password"
-                android:contentDescription="password_icon"
                 app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+            <!-- Bigger touch target -->
+            <ImageView
+                android:id="@+id/password_eye"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginEnd="6dp"
+                android:padding="12dp"
+                android:src="@drawable/eye_ic"
+                android:contentDescription="@string/toggle_password_visibility"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent" />
 
@@ -191,24 +210,24 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
+                android:layout_marginEnd="8dp"
                 android:hint="@string/enter_password"
                 android:inputType="textPassword"
+                android:autofillHints="password"
                 android:background="@null"
                 android:textSize="16sp"
                 android:textColor="@android:color/black"
                 android:textColorHint="#757575"
-                android:minHeight="40dp"
-                android:paddingVertical="0dp"
+                android:minHeight="48dp"
                 android:gravity="center_vertical"
-                android:autofillHints="password"
                 app:layout_constraintStart_toEndOf="@id/password_icon"
-                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/password_eye"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <!-- Re-enter password label -->
+        <!-- Re-enter password label (FIXED constraints) -->
         <TextView
             android:id="@+id/re_password_text"
             android:layout_width="0dp"
@@ -221,7 +240,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
-        <!-- ✅ Re-enter password box -->
+        <!-- Re-enter row (lock + edit + eye) -->
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/re_entry_password"
             android:layout_width="0dp"
@@ -236,9 +255,25 @@
                 android:id="@+id/re_password_icon"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
+                android:layout_marginStart="12dp"
+                android:contentDescription="@string/icon_password"
                 android:src="@drawable/ic_password"
-                android:contentDescription="re_password_icon"
                 app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+            <ImageView
+                android:id="@+id/re_password_eye"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginEnd="6dp"
+                android:padding="12dp"
+                android:src="@drawable/eye_ic"
+                android:contentDescription="@string/toggle_password_visibility"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent" />
 
@@ -247,18 +282,18 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
+                android:layout_marginEnd="8dp"
                 android:hint="@string/reenter_password_hint"
                 android:inputType="textPassword"
+                android:autofillHints="password"
                 android:background="@null"
                 android:textSize="16sp"
                 android:textColor="@android:color/black"
                 android:textColorHint="#757575"
-                android:minHeight="40dp"
-                android:paddingVertical="0dp"
+                android:minHeight="48dp"
                 android:gravity="center_vertical"
-                android:autofillHints="password"
                 app:layout_constraintStart_toEndOf="@id/re_password_icon"
-                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/re_password_eye"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent" />
 
@@ -319,7 +354,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"/>
-
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

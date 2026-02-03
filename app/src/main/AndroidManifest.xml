@@ -12,22 +12,22 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MealMatch"
         tools:targetApi="31">
-
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" />
         <!-- Login screen (launcher) -->
         <activity
             android:name=".LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-
-        <!-- Sign Up screen -->
+        </activity> <!-- Sign Up screen -->
         <activity
             android:name=".SignUpActivity"
             android:exported="false" />
-
     </application>
 
 </manifest>
