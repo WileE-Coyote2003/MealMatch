@@ -1,12 +1,15 @@
 package com.example.mealmatch
 
 import android.os.Bundle
+import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.launch
+import java.util.Calendar
 
 class MainActivity : AppCompatActivity() {
 
@@ -54,7 +57,20 @@ class MainActivity : AppCompatActivity() {
             Ingredient("Turkey Ham", "https://www.themealdb.com/images/ingredients/Turkey_Ham.png"),
             Ingredient("Corn Flour", "https://www.themealdb.com/images/ingredients/corn_flour.png")
         )
-
+        // browse by name
+//        val letters = listOf(
+//            findViewById<TextView>(R.id.filter_all),
+//        )
+//        letters.forEach { tv ->
+//            tv.setOnClickListener {
+//                val letter = tv.text.toString()
+//                // filter your list here
+//                Toast.makeText(this, "Filter: $letter", Toast.LENGTH_SHORT).show()
+//            }
+//        }
+        //footer year
+        val year = Calendar.getInstance().get(Calendar.YEAR)
+        findViewById<TextView>(R.id.footer_year).text="© $year MealMatch. All rights reserved."
         ingredientAdapter = IngredientAdapter(ingredients)
 
         ingredientRecyclerView.layoutManager =
