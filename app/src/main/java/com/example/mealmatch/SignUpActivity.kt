@@ -124,7 +124,6 @@ class SignUpActivity : AppCompatActivity() {
                     db.collection("users").document(uid)
                         .set(userData)
                         .addOnSuccessListener {
-                            Log.d(TAG, "Firestore user document created")
                             Toast.makeText(this, "Account created", Toast.LENGTH_SHORT).show()
 
                             val intent = Intent(this, MainActivity::class.java).apply {
@@ -133,13 +132,11 @@ class SignUpActivity : AppCompatActivity() {
                             startActivity(intent)
                         }
                         .addOnFailureListener { e ->
-                            Log.e(TAG, "Firestore write failed", e)
                             signUpBtn.isEnabled = true
                             Toast.makeText(this, e.message ?: "Firestore error", Toast.LENGTH_LONG).show()
                         }
                 }
                 .addOnFailureListener { e ->
-                    Log.e(TAG, "Firebase Auth signup failed", e)
                     signUpBtn.isEnabled = true
                     Toast.makeText(this, e.message ?: "Auth error", Toast.LENGTH_LONG).show()
                 }

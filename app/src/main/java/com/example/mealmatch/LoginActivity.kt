@@ -9,13 +9,23 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.FirebaseApp
+import com.google.firebase.auth.FirebaseAuth
 
 class LoginActivity : AppCompatActivity() {
+
+    private lateinit var auth: FirebaseAuth
+    private var isPasswordVisible = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
+        // Firebase
+        FirebaseApp.initializeApp(this)
+        auth = FirebaseAuth.getInstance()
+
+        // Views
         val signUpText = findViewById<TextView>(R.id.sign_up_text)
         val loginBtn = findViewById<Button>(R.id.login_btn)
         val backText = findViewById<TextView>(R.id.back_text)
@@ -38,7 +48,7 @@ class LoginActivity : AppCompatActivity() {
             finish()
         }
 
-        // ---- Login (placeholder for Firebase login) ----
+        // ---- Login with Firebase ----
         loginBtn.setOnClickListener {
             val email = emailBox.text.toString().trim()
             val password = passwordBox.text.toString().trim()
@@ -55,15 +65,24 @@ class LoginActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show()
+            loginBtn.isEnabled = false
 
-            // After Firebase login later:
-            // startActivity(Intent(this, MainActivity::class.java))
-            // finish()
+            auth.signInWithEmailAndPassword(email, password)
+                .addOnSuccessListener {
+                    Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show()
+
+                    val intent = Intent(this, MainActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    }
+                    startActivity(intent)
+                }
+                .addOnFailureListener { e ->
+                    loginBtn.isEnabled = true
+                    Toast.makeText(this, e.message ?: "Login failed", Toast.LENGTH_LONG).show()
+                }
         }
 
         // ---- Password visibility toggle ----
-        var isPasswordVisible = false
         eyeBtn.setImageResource(R.drawable.eye_ic)
 
         eyeBtn.setOnClickListener {
