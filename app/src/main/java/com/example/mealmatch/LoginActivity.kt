@@ -16,22 +16,29 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-        val signUpText = findViewById<TextView>(R.id.sign_in_text) // "Sign Up"
+        val signUpText = findViewById<TextView>(R.id.sign_up_text)
         val loginBtn = findViewById<Button>(R.id.login_btn)
         val backText = findViewById<TextView>(R.id.back_text)
 
         val emailBox = findViewById<EditText>(R.id.email_box)
         val passwordBox = findViewById<EditText>(R.id.password_box)
-
         val eyeBtn = findViewById<ImageView>(R.id.eye_btn)
+
+        // ---- Go to SignUpActivity ----
+        signUpText.isClickable = true
+        signUpText.isFocusable = true
+        signUpText.bringToFront()
+
         signUpText.setOnClickListener {
             startActivity(Intent(this, SignUpActivity::class.java))
         }
 
+        // ---- Back to MainActivity ----
         backText.setOnClickListener {
             finish()
         }
 
+        // ---- Login (placeholder for Firebase login) ----
         loginBtn.setOnClickListener {
             val email = emailBox.text.toString().trim()
             val password = passwordBox.text.toString().trim()
@@ -50,11 +57,12 @@ class LoginActivity : AppCompatActivity() {
 
             Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show()
 
-            // Example after real login:
-            // startActivity(Intent(this, HomeActivity::class.java))
+            // After Firebase login later:
+            // startActivity(Intent(this, MainActivity::class.java))
             // finish()
         }
 
+        // ---- Password visibility toggle ----
         var isPasswordVisible = false
         eyeBtn.setImageResource(R.drawable.eye_ic)
 
@@ -62,18 +70,15 @@ class LoginActivity : AppCompatActivity() {
             isPasswordVisible = !isPasswordVisible
 
             if (isPasswordVisible) {
-                // Show password + show "eye" icon
                 passwordBox.inputType =
                     InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
                 eyeBtn.setImageResource(R.drawable.ic_eye_off)
             } else {
-                // Hide password + show "eye-off" icon
                 passwordBox.inputType =
                     InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
                 eyeBtn.setImageResource(R.drawable.eye_ic)
             }
 
-            // keep cursor at end
             passwordBox.setSelection(passwordBox.text.length)
         }
     }

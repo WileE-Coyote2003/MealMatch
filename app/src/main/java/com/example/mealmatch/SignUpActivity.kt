@@ -1,15 +1,26 @@
 package com.example.mealmatch
 
+import android.content.Intent
 import android.os.Bundle
 import android.text.InputType
+import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.FirebaseApp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
 
 class SignUpActivity : AppCompatActivity() {
+
+    private val TAG = "SignUpActivity"
+
+    private lateinit var auth: FirebaseAuth
+    private lateinit var db: FirebaseFirestore
 
     private var passwordVisible = false
     private var rePasswordVisible = false
@@ -17,6 +28,13 @@ class SignUpActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_sign_up)
+
+        // ✅ IMPORTANT: initialize Firebase BEFORE getInstance()
+        FirebaseApp.initializeApp(this)
+        Log.d(TAG, "FirebaseApp initialized")
+
+        auth = FirebaseAuth.getInstance()
+        db = FirebaseFirestore.getInstance()
 
         // --- Views ---
         val loginText = findViewById<TextView>(R.id.sign_in_text)   // "Log in"
@@ -30,7 +48,7 @@ class SignUpActivity : AppCompatActivity() {
         val passwordEye = findViewById<ImageView>(R.id.password_eye)
         val rePasswordEye = findViewById<ImageView>(R.id.re_password_eye)
 
-        // --- Initial state: password hidden -> show eye_off icon ---
+        // --- Initial state: password hidden -> show eye icon ---
         passwordEye.setImageResource(R.drawable.eye_ic)
         rePasswordEye.setImageResource(R.drawable.eye_ic)
 
@@ -60,50 +78,84 @@ class SignUpActivity : AppCompatActivity() {
                 nameBox.requestFocus()
                 return@setOnClickListener
             }
-
             if (email.isEmpty()) {
                 emailBox.error = "Email required"
                 emailBox.requestFocus()
                 return@setOnClickListener
             }
-
             if (pass.isEmpty()) {
                 passBox.error = "Password required"
                 passBox.requestFocus()
                 return@setOnClickListener
             }
-
             if (rePass.isEmpty()) {
                 rePassBox.error = "Re-enter password"
                 rePassBox.requestFocus()
                 return@setOnClickListener
             }
-
             if (pass != rePass) {
                 rePassBox.error = "Passwords do not match"
                 rePassBox.requestFocus()
                 return@setOnClickListener
             }
 
-            Toast.makeText(this, "Account created", Toast.LENGTH_SHORT).show()
-            finish()
+            Log.d(TAG, "Starting signup for email=$email")
+            signUpBtn.isEnabled = false
+
+            auth.createUserWithEmailAndPassword(email, pass)
+                .addOnSuccessListener { result ->
+                    val uid = result.user?.uid
+                    if (uid == null) {
+                        Log.e(TAG, "Signup succeeded but UID is null")
+                        signUpBtn.isEnabled = true
+                        Toast.makeText(this, "Signup failed (UID missing)", Toast.LENGTH_LONG).show()
+                        return@addOnSuccessListener
+                    }
+
+                    Log.d(TAG, "Firebase Auth success. uid=$uid")
+
+                    val userData = hashMapOf(
+                        "name" to name,
+                        "email" to email,
+                        "createdAt" to FieldValue.serverTimestamp(),
+                        "score" to 0
+                    )
+
+                    db.collection("users").document(uid)
+                        .set(userData)
+                        .addOnSuccessListener {
+                            Log.d(TAG, "Firestore user document created")
+                            Toast.makeText(this, "Account created", Toast.LENGTH_SHORT).show()
+
+                            val intent = Intent(this, MainActivity::class.java).apply {
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            }
+                            startActivity(intent)
+                        }
+                        .addOnFailureListener { e ->
+                            Log.e(TAG, "Firestore write failed", e)
+                            signUpBtn.isEnabled = true
+                            Toast.makeText(this, e.message ?: "Firestore error", Toast.LENGTH_LONG).show()
+                        }
+                }
+                .addOnFailureListener { e ->
+                    Log.e(TAG, "Firebase Auth signup failed", e)
+                    signUpBtn.isEnabled = true
+                    Toast.makeText(this, e.message ?: "Auth error", Toast.LENGTH_LONG).show()
+                }
         }
     }
 
     private fun togglePassword(editText: EditText, eye: ImageView, visible: Boolean) {
         if (visible) {
-            // show text
             editText.inputType =
                 InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
-            eye.setImageResource(R.drawable.ic_eye_off) // 👁 visible
+            eye.setImageResource(R.drawable.ic_eye_off)
         } else {
-            // hide text (dots)
             editText.inputType =
                 InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-            eye.setImageResource(R.drawable.eye_ic) // 🚫👁 hidden
+            eye.setImageResource(R.drawable.eye_ic)
         }
-
-        // keep cursor at end
         editText.setSelection(editText.text?.length ?: 0)
     }
 }

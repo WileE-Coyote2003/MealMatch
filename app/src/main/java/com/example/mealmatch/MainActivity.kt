@@ -7,6 +7,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.launch
+import android.content.Intent
+import com.google.android.material.button.MaterialButton
 
 class MainActivity : AppCompatActivity() {
 
@@ -17,6 +19,14 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        // =========================
+        // Sign In Button
+        // =========================
+        val signInBtn = findViewById<MaterialButton>(R.id.signInBtn)
+        signInBtn.setOnClickListener {
+            startActivity(Intent(this, LoginActivity::class.java))
+        }
 
         // =========================
         // Recommended Meals
