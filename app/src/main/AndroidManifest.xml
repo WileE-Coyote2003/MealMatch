@@ -12,10 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MealMatch"
         tools:targetApi="31">
-        <activity
-            android:name=".LoginActivity"
-            android:exported="false" />
-        <!-- Login screen (launcher) -->
+        <!-- Main screen (launcher / default) -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -23,7 +20,14 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity> <!-- Sign Up screen -->
+        </activity>
+
+        <!-- Login screen -->
+        <activity
+            android:name=".LoginActivity"
+            android:exported="false" />
+
+        <!-- Sign Up screen -->
         <activity
             android:name=".SignUpActivity"
             android:exported="false" />
