@@ -100,7 +100,7 @@ class SignUpActivity : AppCompatActivity() {
             // hide text (dots)
             editText.inputType =
                 InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-            eye.setImageResource(R.drawable.eye_ic) // 🚫👁 hidden
+            eye.setImageResource(R.drawable.eye_ic)
         }
 
         // keep cursor at end
