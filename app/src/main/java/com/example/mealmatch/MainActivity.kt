@@ -1,12 +1,17 @@
 package com.example.mealmatch
 
 import android.content.Intent
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
+import androidx.core.widget.NestedScrollView
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -34,6 +39,15 @@ class MainActivity : AppCompatActivity() {
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var rightDrawer: NavigationView
 
+    // ===== Navbar scroll behavior views =====
+    private lateinit var scrollView: NestedScrollView
+    private lateinit var topNavbar: ConstraintLayout
+    private lateinit var tvMeal: TextView
+    private lateinit var tvMatch: TextView
+
+    // track current state to avoid re-setting colors every pixel
+    private var isScrolledStyle = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -44,9 +58,17 @@ class MainActivity : AppCompatActivity() {
         drawerLayout = findViewById(R.id.drawerLayout)
         rightDrawer = findViewById(R.id.rightDrawer)
 
-        // Navbar buttons
+        // Navbar
+        topNavbar = findViewById(R.id.topnavbar)
+        tvMeal = findViewById(R.id.tvMeal)
+        tvMatch = findViewById(R.id.tvMatch)
+
         signInBtn = findViewById(R.id.signInBtn)
         profileBtn = findViewById(R.id.profileBtn)
+
+        // ScrollView
+        scrollView = findViewById(R.id.mainContent)
+        setupNavbarScrollBehavior()
 
         signInBtn.setOnClickListener {
             startActivity(Intent(this, LoginActivity::class.java))
@@ -67,7 +89,6 @@ class MainActivity : AppCompatActivity() {
                 }
                 R.id.menu_logout -> {
                     auth.signOut()
-
                     drawerLayout.closeDrawer(GravityCompat.END)
 
                     updateTopBar()
@@ -127,6 +148,9 @@ class MainActivity : AppCompatActivity() {
         val year = Calendar.getInstance().get(Calendar.YEAR)
         findViewById<TextView>(R.id.footer_year).text =
             "© $year MealMatch. All rights reserved."
+
+        // Apply correct navbar style immediately (top at start)
+        applyNavbarStyle(scrolled = false)
     }
 
     override fun onStart() {
@@ -165,5 +189,65 @@ class MainActivity : AppCompatActivity() {
         } else {
             super.onBackPressed()
         }
+    }
+
+    // ==========================================================
+    // NAVBAR SCROLL IMPLEMENTATION (transparent at top, white when scroll)
+    // ==========================================================
+    private fun setupNavbarScrollBehavior() {
+        val thresholdPx = dpToPx(8) // change when scrollY > 8dp
+
+        scrollView.setOnScrollChangeListener { _, _, scrollY, _, _ ->
+            val shouldBeScrolledStyle = scrollY > thresholdPx
+            if (shouldBeScrolledStyle != isScrolledStyle) {
+                isScrolledStyle = shouldBeScrolledStyle
+                applyNavbarStyle(scrolled = shouldBeScrolledStyle)
+            }
+        }
+    }
+
+    private fun applyNavbarStyle(scrolled: Boolean) {
+        if (scrolled) {
+            // White navbar
+            topNavbar.setBackgroundColor(Color.WHITE)
+
+            // Logo text color
+            tvMeal.setTextColor(Color.BLACK)
+            // tvMatch stays orange as in xml
+
+            // Sign in button (black outline on white)
+            signInBtn.setTextColor(Color.WHITE)
+            signInBtn.iconTint = ColorStateList.valueOf(Color.WHITE)
+            signInBtn.strokeColor = ColorStateList.valueOf(Color.BLACK)
+            signInBtn.backgroundTintList = ColorStateList.valueOf(Color.BLACK)
+
+            // Profile icon swap to black (you must have this drawable)
+            profileBtn.setImageResource(R.drawable.ic_profile_black)
+            profileBtn.strokeColor = ColorStateList.valueOf(Color.BLACK)
+            profileBtn.strokeWidth = dpToPx(1).toFloat()
+
+        } else {
+            // Transparent navbar (on top of header image)
+            topNavbar.setBackgroundColor(Color.TRANSPARENT)
+
+            // Logo text color
+            tvMeal.setTextColor(Color.WHITE)
+
+            // Sign in button (your original)
+            signInBtn.setTextColor(Color.WHITE)
+            signInBtn.iconTint = ColorStateList.valueOf(Color.WHITE)
+            signInBtn.strokeColor = ColorStateList.valueOf(Color.WHITE)
+            signInBtn.backgroundTintList = ContextCompat.getColorStateList(this, R.color.signin_bg_states)
+
+            // Profile icon swap back to white
+            profileBtn.setImageResource(R.drawable.ic_profile_white)
+            profileBtn.strokeColor = ColorStateList.valueOf(Color.WHITE)
+            profileBtn.strokeWidth = dpToPx(1).toFloat()
+
+        }
+    }
+
+    private fun dpToPx(dp: Int): Int {
+        return (dp * resources.displayMetrics.density).toInt()
     }
 }
