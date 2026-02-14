@@ -38,34 +38,41 @@
         <!-- padding keeps it feeling like text, but still large hit area -->
         <item name="android:paddingStart">2dp</item>
         <item name="android:paddingEnd">2dp</item>
-        <!-- ✅ contrast-friendly orange (slightly darker than #FF6900) -->
+        <!-- contrast-friendly orange (slightly darker than #FF6900) -->
         <item name="android:textColor">@color/gray_400</item>
         <item name="android:textSize">14sp</item>
     </style>
+<!--    Chip Groups-->
+    <style name="chips_group" parent="Widget.Material3.Button">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">50dp</item>
+        <!--important -->
+        <item name="android:checkable">true</item>
 
-<!--    <style name="SearchBarShape">-->
-<!--        <item name="cornerFamily">rounded</item>-->
-<!--        <item name="cornerSize">20dp</item>-->
-<!--    </style>-->
+        <!-- normal vs selected colors -->
+        <item name="backgroundTint">@color/filter_chip_bg</item>
 
-<!--    <style name="Widget.MealMatch.SearchBar" parent="Widget.Material3.SearchBar">-->
+        <!-- pill shape -->
+        <item name="cornerRadius">25dp</item>
 
-<!--        &lt;!&ndash; Icon color &ndash;&gt;-->
-<!--        <item name="navigationIconTint">@color/gray_400</item>-->
+        <item name="strokeWidth">2dp</item>
+        <item name="strokeColor">@color/filter_chip_bg</item>
 
-<!--        &lt;!&ndash; IMPORTANT: equal vertical padding &ndash;&gt;-->
-<!--        <item name="contentPaddingTop">15dp</item>-->
-<!--        <item name="contentPaddingBottom">12dp</item>-->
-
-<!--        &lt;!&ndash; Horizontal padding &ndash;&gt;-->
-<!--        <item name="contentPaddingStart">20dp</item>-->
-<!--        <item name="contentPaddingEnd">20dp</item>-->
-
-<!--        &lt;!&ndash; Hint & text color &ndash;&gt;-->
-<!--        <item name="android:textColorHint">@color/gray_400</item>-->
-<!--        <item name="android:textColor">@color/gray_400</item>-->
-
-<!--    </style>-->
-
-
+        <item name="android:textColor">@android:color/black</item>
+    </style>
+<!--    MealFilter Btn-->
+    <style name="clear_all_btn" parent="Widget.Material3.Button">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">70dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:clickable">true</item>
+        <item name="android:backgroundTint">@color/black</item>
+    </style>
+    <style name="show_result_btn" parent="Widget.Material3.Button">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">70dp</item>
+        <item name="android:layout_weight">2</item>
+        <item name="android:clickable">true</item>
+        <item name="android:backgroundTint">@color/black</item>
+    </style>
 </resources>
