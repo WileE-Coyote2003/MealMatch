@@ -48,6 +48,10 @@
         <item name="android:layout_height">50dp</item>
         <!--important -->
         <item name="android:checkable">true</item>
+    <style name="CircleImage">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
 
         <!-- normal vs selected colors -->
         <item name="backgroundTint">@color/filter_chip_bg</item>
