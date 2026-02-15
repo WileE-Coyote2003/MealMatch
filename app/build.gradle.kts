@@ -54,7 +54,8 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
 
     // Activity / ViewModel / Lifecycle
-    implementation("androidx.activity:activity-ktx:1.9.2")
+//    implementation("androidx.activity:activity-ktx:1.9.2")
+    implementation("androidx.activity:activity-ktx:1.8.2")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.7")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
@@ -71,6 +72,8 @@ dependencies {
 
     // RecyclerView
     implementation("androidx.recyclerview:recyclerview:1.3.2")
+//    implementation("androidx.activity:activity:1.12.3")
+    implementation("androidx.activity:activity:1.8.2")
 
     // Tests
     testImplementation("junit:junit:4.13.2")
