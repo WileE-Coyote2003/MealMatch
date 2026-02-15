@@ -5,15 +5,13 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="20dp"
-    tools:context=".MealFilter">
+    android:padding="20dp">
 
     <!-- HEADER (fixed) -->
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/header"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
         android:layout_margin="20dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -21,23 +19,42 @@
 
         <TextView
             android:id="@+id/filter_recipe"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="Filter Recipes"
             android:textStyle="bold"
             android:textSize="30sp"
             android:textColor="@color/black"
             android:paddingTop="8dp"
-            android:paddingBottom="8dp" />
+            android:paddingBottom="8dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/btnClose"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/culinary_search"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="Fine-tune your culinary search"
             android:textSize="18sp"
-            android:textColor="@color/black" />
-    </LinearLayout>
+            android:textColor="@color/black"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/btnClose"
+            app:layout_constraintTop_toBottomOf="@id/filter_recipe"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <!-- ✕ Close Button -->
+        <ImageButton
+            android:id="@+id/btnClose"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Close"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:tint="@color/black" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- FOOTER (sticky) -->
     <LinearLayout
@@ -56,8 +73,7 @@
         <Button
             android:id="@+id/btn_clear_all"
             android:text="Clear all"
-            style="@style/clear_all_btn"
-            />
+            style="@style/clear_all_btn" />
 
         <Space
             android:layout_width="12dp"
@@ -66,8 +82,7 @@
         <Button
             android:id="@+id/btn_show_results"
             android:text="Show Results"
-            style="@style/show_result_btn"
-            />
+            style="@style/show_result_btn" />
     </LinearLayout>
 
     <!-- SCROLLABLE MIDDLE -->
@@ -85,7 +100,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- ScrollView MUST have only ONE child -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -118,7 +132,6 @@
                     android:textStyle="bold" />
             </LinearLayout>
 
-            <!-- TODO: Put your chips / flexbox / recycler here -->
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/chipGroupCategories"
                 android:layout_width="match_parent"
@@ -127,70 +140,85 @@
                 app:selectionRequired="false"
                 app:chipSpacingHorizontal="10dp"
                 app:chipSpacingVertical="10dp">
+
                 <com.google.android.material.button.MaterialButton
-                    style="@style/chips_group"
                     android:id="@+id/c_beef"
-                    android:text="Beef"/>
-                <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
+                    android:text="Beef" />
+
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/c_chicken"
-                    android:text="Chicken"/>
-                <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
+                    android:text="Chicken" />
+
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/c_dessert"
-                    android:text="Dessert"/>
-                <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
+                    android:text="Dessert" />
+
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/c_lamb"
-                    android:text="Lamb"/>
-                <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
+                    android:text="Lamb" />
+
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/c_miscellaneous"
-                    android:text="Miscellaneous"/>
-                <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
+                    android:text="Miscellaneous" />
+
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/c_pasta"
-                    android:text="Pasta"/>
-                <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
+                    android:text="Pasta" />
+
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/c_pork"
-                    android:text="Pork"/>
-                <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
+                    android:text="Pork" />
+
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/c_seafood"
-                    android:text="Seafood"/>
-                <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
+                    android:text="Seafood" />
+
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/c_side"
-                    android:text="Side"/>
-                <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
+                    android:text="Side" />
+
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/c_starter"
-                    android:text="Starter"/>
-                <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
+                    android:text="Starter" />
+
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/c_vegan"
-                    android:text="Vegan"/>
-                <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
+                    android:text="Vegan" />
+
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/c_vegetarian"
-                    android:text="Vegetarian"/>
-                <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
+                    android:text="Vegetarian" />
+
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/c_breakfast"
-                    android:text="Breakfast"/>
-                <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
+                    android:text="Breakfast" />
+
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/c_goat"
-                    android:text="Goat"/>
+                    style="@style/chips_group"
+                    android:text="Goat" />
 
             </com.google.android.material.chip.ChipGroup>
+
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:background="#E5E7EB"
                 android:layout_marginTop="8dp"
-                android:layout_marginBottom="16dp"/>
+                android:layout_marginBottom="16dp" />
 
             <!-- AREA/ORIGIN title row -->
             <LinearLayout
@@ -219,7 +247,6 @@
                     android:textStyle="bold" />
             </LinearLayout>
 
-            <!-- TODO: Put your chips / flexbox / recycler here -->
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/chipGroupOrigin"
                 android:layout_width="match_parent"
@@ -228,6 +255,7 @@
                 app:selectionRequired="false"
                 app:chipSpacingHorizontal="10dp"
                 app:chipSpacingVertical="10dp">
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_uk"
@@ -376,7 +404,9 @@
                     style="@style/chips_group"
                     android:id="@+id/a_venezuela"
                     android:text="Venezuela"/>
+
             </com.google.android.material.chip.ChipGroup>
+
             <View
                 android:layout_width="match_parent"
                 android:layout_height="24dp" />

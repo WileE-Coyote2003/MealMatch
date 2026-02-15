@@ -42,16 +42,13 @@
         <item name="android:textColor">@color/gray_400</item>
         <item name="android:textSize">14sp</item>
     </style>
-<!--    Chip Groups-->
+    <!-- Chip Groups -->
     <style name="chips_group" parent="Widget.Material3.Button">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">50dp</item>
-        <!--important -->
+
+        <!-- important -->
         <item name="android:checkable">true</item>
-    <style name="CircleImage">
-        <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">50%</item>
-    </style>
 
         <!-- normal vs selected colors -->
         <item name="backgroundTint">@color/filter_chip_bg</item>
@@ -63,6 +60,11 @@
         <item name="strokeColor">@color/filter_chip_bg</item>
 
         <item name="android:textColor">@android:color/black</item>
+    </style>
+
+    <style name="CircleImage">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
     </style>
 <!--    MealFilter Btn-->
     <style name="clear_all_btn" parent="Widget.Material3.Button">

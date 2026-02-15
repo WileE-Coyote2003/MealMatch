@@ -23,7 +23,6 @@ import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
-import java.util.Calendar
 
 class MainActivity : AppCompatActivity() {
 
@@ -78,6 +77,11 @@ class MainActivity : AppCompatActivity() {
         profileBtn.setOnClickListener {
             drawerLayout.openDrawer(GravityCompat.END)
             loadDrawerUserInfo()
+        }
+
+        val filterBtn = findViewById<MaterialButton>(R.id.filterBtn)
+        filterBtn.setOnClickListener {
+            MealFilterBottomSheet().show(supportFragmentManager, MealFilterBottomSheet.TAG)
         }
 
         // Drawer menu actions

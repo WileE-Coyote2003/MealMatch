@@ -1,18 +1,19 @@
 package com.example.mealmatch
 
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
-import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
-class MealFilter : AppCompatActivity() {
+class MealFilterBottomSheet : BottomSheetDialogFragment() {
+
     private lateinit var tvCategorySelected: TextView
     private lateinit var tvAreaSelected: TextView
     private lateinit var btnClearAll: Button
+    private lateinit var btnShowResults: Button
 
     private var selectedCountC = 0
     private var selectedCountA = 0
@@ -20,24 +21,25 @@ class MealFilter : AppCompatActivity() {
     private val selectedCategoryMap = mutableMapOf<Int, Boolean>()
     private val selectedAreaMap = mutableMapOf<Int, Boolean>()
 
-    // Keep ids so Clear All can reset everything
     private lateinit var categoryIds: List<Int>
     private lateinit var areaIds: List<Int>
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContentView(R.layout.activity_meal_filter)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        // Use your existing XML
+        return inflater.inflate(R.layout.activity_meal_filter, container, false)
+    }
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-        tvCategorySelected = findViewById(R.id.tv_category_selected)
-        tvAreaSelected = findViewById(R.id.tv_area_selected)
-        btnClearAll = findViewById(R.id.btn_clear_all)
+        tvCategorySelected = view.findViewById(R.id.tv_category_selected)
+        tvAreaSelected = view.findViewById(R.id.tv_area_selected)
+        btnClearAll = view.findViewById(R.id.btn_clear_all)
+        btnShowResults = view.findViewById(R.id.btn_show_results)
 
         updateSelectedTextC()
         updateSelectedTextA()
@@ -58,6 +60,7 @@ class MealFilter : AppCompatActivity() {
             R.id.c_breakfast,
             R.id.c_goat
         )
+
         areaIds = listOf(
             R.id.a_uk,
             R.id.a_us,
@@ -99,6 +102,7 @@ class MealFilter : AppCompatActivity() {
         )
 
         setupToggleClicks(
+            root = view,
             ids = categoryIds,
             stateMap = selectedCategoryMap,
             onSelected = { selectedCountC++; updateSelectedTextC() },
@@ -106,6 +110,7 @@ class MealFilter : AppCompatActivity() {
         )
 
         setupToggleClicks(
+            root = view,
             ids = areaIds,
             stateMap = selectedAreaMap,
             onSelected = { selectedCountA++; updateSelectedTextA() },
@@ -113,29 +118,51 @@ class MealFilter : AppCompatActivity() {
         )
 
         btnClearAll.setOnClickListener {
-            clearAllSelections()
+            clearAllSelections(view)
+        }
+
+        view.findViewById<View>(R.id.btnClose).setOnClickListener {
+            dismiss()
+        }
+
+        // For now: just close popup when show results clicked
+        btnShowResults.setOnClickListener {
+            dismiss()
         }
     }
 
+    // ✅ IMPORTANT: Force BottomSheet expand so scroll content shows
+    override fun onStart() {
+        super.onStart()
+
+        val sheet = dialog?.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet) ?: return
+        sheet.layoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT
+
+        val behavior = com.google.android.material.bottomsheet.BottomSheetBehavior.from(sheet)
+        behavior.state = com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED
+        behavior.skipCollapsed = true
+
+        // ✅ prevent dragging (no conflict with scrolling)
+        behavior.isDraggable = false
+    }
+
     private fun setupToggleClicks(
+        root: View,
         ids: List<Int>,
         stateMap: MutableMap<Int, Boolean>,
         onSelected: () -> Unit,
         onUnselected: () -> Unit
     ) {
         for (id in ids) {
-            val v = findViewById<View>(id)
+            val v = root.findViewById<View>(id)
             stateMap[id] = false
-
-            // ensure initial UI state
             v.isSelected = false
 
             v.setOnClickListener {
                 val currentlySelected = stateMap[id] ?: false
-
                 if (!currentlySelected) {
                     stateMap[id] = true
-                    v.isSelected = true      // changes bg using state_selected selector
+                    v.isSelected = true
                     onSelected()
                 } else {
                     stateMap[id] = false
@@ -146,20 +173,16 @@ class MealFilter : AppCompatActivity() {
         }
     }
 
-    private fun clearAllSelections() {
-        // reset category UI + map
+    private fun clearAllSelections(root: View) {
         for (id in categoryIds) {
-            findViewById<View>(id).isSelected = false
+            root.findViewById<View>(id).isSelected = false
             selectedCategoryMap[id] = false
         }
-
-        // reset area UI + map
         for (id in areaIds) {
-            findViewById<View>(id).isSelected = false
+            root.findViewById<View>(id).isSelected = false
             selectedAreaMap[id] = false
         }
 
-        // reset counts + labels
         selectedCountC = 0
         selectedCountA = 0
         updateSelectedTextC()
@@ -172,5 +195,9 @@ class MealFilter : AppCompatActivity() {
 
     private fun updateSelectedTextA() {
         tvAreaSelected.text = "$selectedCountA selected"
+    }
+
+    companion object {
+        const val TAG = "MealFilterBottomSheet"
     }
 }
