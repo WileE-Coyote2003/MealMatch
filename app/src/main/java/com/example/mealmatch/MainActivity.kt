@@ -39,11 +39,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var rvTrendingMeals: RecyclerView
     private lateinit var mealAdapter: MealAdapter
 
-    // Search results (grid)
+    // Search results (grid preview on home)
     private lateinit var rvSearchResults: RecyclerView
     private lateinit var searchAdapter: SearchMealAdapter
 
     // Ingredients (horizontal)
+    private lateinit var rvIngredients: RecyclerView
     private lateinit var ingredientAdapter: IngredientAdapter
 
     private lateinit var auth: FirebaseAuth
@@ -65,11 +66,18 @@ class MainActivity : AppCompatActivity() {
     // Search
     private lateinit var searchEditText: TextInputEditText
     private lateinit var trendingTitle: TextView
+    private lateinit var viewAllText: TextView
     private val repo = MealRepository()
     private var searchJob: Job? = null
 
     // Keep last trending/random list for restore
     private var latestTrendingMeals: List<Meal> = emptyList()
+
+    // Home preview: keep last query + full results for View All page
+    private var lastQuery: String = ""
+    private var lastResults: ArrayList<Meal> = arrayListOf()
+
+    private val HOME_PREVIEW_LIMIT = 6
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -92,13 +100,15 @@ class MainActivity : AppCompatActivity() {
         scrollView = findViewById(R.id.mainContent)
         setupNavbarScrollBehavior()
 
-        // Title + Search (init early)
+        // Title + Search
         trendingTitle = findViewById(R.id.trendingTitle)
+        viewAllText = findViewById(R.id.viewAllText)
         searchEditText = findViewById(R.id.searchEditText)
 
         // =========================
-        // Init BOTH RecyclerViews EARLY (fix crash)
+        // RecyclerViews
         // =========================
+
         // Trending Meals (Horizontal)
         rvTrendingMeals = findViewById(R.id.rvRecommendedMeals)
         mealAdapter = MealAdapter(mutableListOf()) { meal ->
@@ -108,22 +118,49 @@ class MainActivity : AppCompatActivity() {
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         rvTrendingMeals.adapter = mealAdapter
 
-        // Search Results (Grid 2 columns)
+        // Search Results (Grid preview on home)
         rvSearchResults = findViewById(R.id.rvSearchResults)
         searchAdapter = SearchMealAdapter(mutableListOf()) { meal ->
             // TODO: Navigate to detail page using meal.idMeal
         }
         rvSearchResults.layoutManager = GridLayoutManager(this, 2)
-        rvSearchResults.isNestedScrollingEnabled = false
+        rvSearchResults.isNestedScrollingEnabled = false // inside NestedScrollView
         rvSearchResults.setHasFixedSize(false)
         rvSearchResults.adapter = searchAdapter
         rvSearchResults.visibility = View.GONE
 
-        // Set initial state safely
+        // Ingredients (Horizontal)
+        rvIngredients = findViewById(R.id.rvIngredients)
+        val ingredients = listOf(
+            Ingredient("Chicken", "https://www.themealdb.com/images/ingredients/chicken.png"),
+            Ingredient("Salmon", "https://www.themealdb.com/images/ingredients/salmon.png"),
+            Ingredient("Beef", "https://www.themealdb.com/images/ingredients/beef.png"),
+            Ingredient("Pork", "https://www.themealdb.com/images/ingredients/pork.png"),
+            Ingredient("Eggs", "https://www.themealdb.com/images/ingredients/eggs.png"),
+            Ingredient("Rice", "https://www.themealdb.com/images/ingredients/sushi_rice.png"),
+            Ingredient("Turkey Ham", "https://www.themealdb.com/images/ingredients/Turkey_Ham.png"),
+            Ingredient("Corn Flour", "https://www.themealdb.com/images/ingredients/corn_flour.png")
+        )
+        ingredientAdapter = IngredientAdapter(ingredients)
+        rvIngredients.layoutManager =
+            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        rvIngredients.adapter = ingredientAdapter
+
+        // Initial UI state
         showTrendingUI()
 
-        // Now safe to setup search listeners
+        // Search listeners
         setupSearchBackendTest()
+
+        // View All -> open new page with all results + pagination there
+        viewAllText.setOnClickListener {
+            if (lastResults.isNotEmpty()) {
+                val intent = Intent(this, SearchResultsActivity::class.java)
+                intent.putExtra(SearchResultsActivity.EXTRA_QUERY, lastQuery)
+                intent.putParcelableArrayListExtra(SearchResultsActivity.EXTRA_MEALS, lastResults)
+                startActivity(intent)
+            }
+        }
 
         // Buttons
         signInBtn.setOnClickListener {
@@ -163,7 +200,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Collect trending/random meals from VM (SAFE now)
+        // Collect trending/random meals from VM
         lifecycleScope.launch {
             viewModel.meals.collect { meals ->
                 latestTrendingMeals = meals
@@ -176,33 +213,11 @@ class MainActivity : AppCompatActivity() {
         }
         viewModel.loadRandomMeals()
 
-        // =========================
-        // Fresh Ingredients (Static)
-        // =========================
-        val ingredientRecyclerView = findViewById<RecyclerView>(R.id.rvIngredients)
-
-        val ingredients = listOf(
-            Ingredient("Chicken", "https://www.themealdb.com/images/ingredients/chicken.png"),
-            Ingredient("Salmon", "https://www.themealdb.com/images/ingredients/salmon.png"),
-            Ingredient("Beef", "https://www.themealdb.com/images/ingredients/beef.png"),
-            Ingredient("Pork", "https://www.themealdb.com/images/ingredients/pork.png"),
-            Ingredient("Eggs", "https://www.themealdb.com/images/ingredients/eggs.png"),
-            Ingredient("Rice", "https://www.themealdb.com/images/ingredients/sushi_rice.png"),
-            Ingredient("Turkey Ham", "https://www.themealdb.com/images/ingredients/Turkey_Ham.png"),
-            Ingredient("Corn Flour", "https://www.themealdb.com/images/ingredients/corn_flour.png")
-        )
-
-        ingredientAdapter = IngredientAdapter(ingredients)
-        ingredientRecyclerView.layoutManager =
-            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        ingredientRecyclerView.adapter = ingredientAdapter
-
         // Footer year
         val year = Calendar.getInstance().get(Calendar.YEAR)
         findViewById<TextView>(R.id.footer_year).text =
             "© $year MealMatch. All rights reserved."
 
-        // Apply correct navbar style immediately (top at start)
         applyNavbarStyle(scrolled = false)
     }
 
@@ -215,12 +230,20 @@ class MainActivity : AppCompatActivity() {
         trendingTitle.text = "Trending Meals"
         rvTrendingMeals.visibility = View.VISIBLE
         rvSearchResults.visibility = View.GONE
+
+        // View All hidden on trending
+        viewAllText.visibility = View.VISIBLE // keep visible if you want always
+        viewAllText.text = "View All"
     }
 
-    private fun showSearchUI(query: String) {
+    private fun showSearchUI(query: String, totalCount: Int) {
         trendingTitle.text = "Search results for \"$query\""
         rvTrendingMeals.visibility = View.GONE
         rvSearchResults.visibility = View.VISIBLE
+
+        // Show View All only if more than 6 results
+        viewAllText.visibility = if (totalCount > HOME_PREVIEW_LIMIT) View.VISIBLE else View.GONE
+        viewAllText.text = "View All"
     }
 
     private fun updateTopBar() {
@@ -257,11 +280,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     // ==========================================================
-    // SEARCH (UI + Logcat)
+    // SEARCH (Home preview: show only 6, View All opens new Activity)
     // ==========================================================
     private fun setupSearchBackendTest() {
 
-        // Debounce typing
         searchEditText.addTextChangedListener { editable ->
             val q = editable?.toString().orEmpty().trim()
 
@@ -273,6 +295,13 @@ class MainActivity : AppCompatActivity() {
                     Log.d("MEAL_SEARCH", "Query empty -> restore trending/random")
                     showTrendingUI()
                     mealAdapter.updateMeals(latestTrendingMeals)
+
+                    // clear search preview + view all
+                    rvSearchResults.visibility = View.GONE
+                    searchAdapter.setMeals(emptyList())
+                    viewAllText.visibility = View.VISIBLE // keep if you want always visible
+                    lastQuery = ""
+                    lastResults = arrayListOf()
                     return@launch
                 }
 
@@ -280,7 +309,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // IME actionSearch
         searchEditText.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 val q = searchEditText.text?.toString().orEmpty().trim()
@@ -291,6 +319,12 @@ class MainActivity : AppCompatActivity() {
                         Log.d("MEAL_SEARCH", "IME search pressed but query empty -> restore trending")
                         showTrendingUI()
                         mealAdapter.updateMeals(latestTrendingMeals)
+
+                        rvSearchResults.visibility = View.GONE
+                        searchAdapter.setMeals(emptyList())
+                        viewAllText.visibility = View.VISIBLE
+                        lastQuery = ""
+                        lastResults = arrayListOf()
                     } else {
                         runSearchAndLog(q)
                     }
@@ -306,18 +340,34 @@ class MainActivity : AppCompatActivity() {
             val results = repo.searchAll(query)
             Log.d("MEAL_SEARCH", "Results count = ${results.size}")
 
-            showSearchUI(query)
-            searchAdapter.updateMeals(results)
+            // store full results for View All screen
+            lastQuery = query
+            lastResults = ArrayList(results)
+
+            showSearchUI(query, results.size)
+
+            // home shows ONLY 6 items
+            val preview = results.take(HOME_PREVIEW_LIMIT)
+            searchAdapter.setMeals(preview)
+
+            // scroll to results area
+            scrollView.post {
+                val anchor = findViewById<View>(R.id.searchRow)
+                scrollView.smoothScrollTo(0, anchor.top)
+            }
 
         } catch (e: Exception) {
             Log.e("MEAL_SEARCH", "Search failed: ${e.message}", e)
-            showSearchUI(query)
-            searchAdapter.updateMeals(emptyList())
+            showSearchUI(query, 0)
+            searchAdapter.setMeals(emptyList())
+            viewAllText.visibility = View.GONE
+            lastQuery = ""
+            lastResults = arrayListOf()
         }
     }
 
     // ==========================================================
-    // NAVBAR SCROLL IMPLEMENTATION (transparent at top, white when scroll)
+    // NAVBAR SCROLL IMPLEMENTATION
     // ==========================================================
     private fun setupNavbarScrollBehavior() {
         val thresholdPx = dpToPx(8)

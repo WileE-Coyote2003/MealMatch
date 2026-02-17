@@ -26,7 +26,6 @@ class SearchMealAdapter(
 
     override fun onBindViewHolder(holder: MealViewHolder, position: Int) {
         val meal = meals[position]
-
         holder.txtMealName.text = meal.strMeal
 
         Picasso.get()
@@ -40,9 +39,15 @@ class SearchMealAdapter(
 
     override fun getItemCount(): Int = meals.size
 
-    fun updateMeals(newMeals: List<Meal>) {
+    fun setMeals(newMeals: List<Meal>) {
         meals.clear()
         meals.addAll(newMeals)
         notifyDataSetChanged()
+    }
+
+    fun appendMeals(more: List<Meal>) {
+        val start = meals.size
+        meals.addAll(more)
+        notifyItemRangeInserted(start, more.size)
     }
 }

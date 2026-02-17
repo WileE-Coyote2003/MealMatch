@@ -23,10 +23,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <!-- Main screen (launcher / default) -->
         <activity
-            android:name=".MealFilterActivity"
-            android:exported="false"/>
+            android:name=".SearchResultsActivity"
+            android:exported="false" />
+        <!-- Main screen (launcher / default) -->
         <activity
             android:name=".LoginActivity"
             android:exported="false" /> <!-- Sign Up screen -->
