@@ -284,6 +284,7 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/searchRow"/>
 
+                <!-- Trending horizontal -->
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvRecommendedMeals"
                     android:layout_width="0dp"
@@ -297,6 +298,30 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent" />
 
+                <!-- Search results grid (2 columns) -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvSearchResults"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:clipToPadding="false"
+                    android:nestedScrollingEnabled="false"
+                    android:visibility="gone"
+                    app:layout_constraintTop_toBottomOf="@id/trendingTitle"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"/>
+
+                <!-- Barrier so ingredients always go below whichever list is visible -->
+                <androidx.constraintlayout.widget.Barrier
+                    android:id="@+id/mealsBottomBarrier"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:barrierDirection="bottom"
+                    app:constraint_referenced_ids="rvRecommendedMeals,rvSearchResults"/>
+
+                <!-- Ingredients title MUST be constrained to the barrier -->
                 <TextView
                     android:id="@+id/freshIngredientsTitle"
                     android:layout_width="wrap_content"
@@ -307,7 +332,7 @@
                     android:textColor="#1F2937"
                     android:layout_marginStart="20dp"
                     android:layout_marginTop="24dp"
-                    app:layout_constraintTop_toBottomOf="@id/rvRecommendedMeals"
+                    app:layout_constraintTop_toBottomOf="@id/mealsBottomBarrier"
                     app:layout_constraintStart_toStartOf="parent"/>
 
                 <androidx.recyclerview.widget.RecyclerView

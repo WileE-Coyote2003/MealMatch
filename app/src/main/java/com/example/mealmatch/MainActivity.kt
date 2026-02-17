@@ -4,7 +4,9 @@ import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.view.View
+import android.view.inputmethod.EditorInfo
 import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -12,22 +14,36 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.core.widget.NestedScrollView
+import androidx.core.widget.addTextChangedListener
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
-import java.util.Calendar
 import com.google.android.material.imageview.ShapeableImageView
 import com.google.android.material.navigation.NavigationView
+import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.util.Calendar
 
 class MainActivity : AppCompatActivity() {
 
     private val viewModel: MealViewModel by viewModels()
+
+    // Trending (horizontal)
+    private lateinit var rvTrendingMeals: RecyclerView
     private lateinit var mealAdapter: MealAdapter
+
+    // Search results (grid)
+    private lateinit var rvSearchResults: RecyclerView
+    private lateinit var searchAdapter: SearchMealAdapter
+
+    // Ingredients (horizontal)
     private lateinit var ingredientAdapter: IngredientAdapter
 
     private lateinit var auth: FirebaseAuth
@@ -39,14 +55,21 @@ class MainActivity : AppCompatActivity() {
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var rightDrawer: NavigationView
 
-    // ===== Navbar scroll behavior views =====
+    // Navbar scroll behavior
     private lateinit var scrollView: NestedScrollView
     private lateinit var topNavbar: ConstraintLayout
     private lateinit var tvMeal: TextView
     private lateinit var tvMatch: TextView
-
-    // track current state to avoid re-setting colors every pixel
     private var isScrolledStyle = false
+
+    // Search
+    private lateinit var searchEditText: TextInputEditText
+    private lateinit var trendingTitle: TextView
+    private val repo = MealRepository()
+    private var searchJob: Job? = null
+
+    // Keep last trending/random list for restore
+    private var latestTrendingMeals: List<Meal> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,7 +85,6 @@ class MainActivity : AppCompatActivity() {
         topNavbar = findViewById(R.id.topnavbar)
         tvMeal = findViewById(R.id.tvMeal)
         tvMatch = findViewById(R.id.tvMatch)
-
         signInBtn = findViewById(R.id.signInBtn)
         profileBtn = findViewById(R.id.profileBtn)
 
@@ -70,6 +92,40 @@ class MainActivity : AppCompatActivity() {
         scrollView = findViewById(R.id.mainContent)
         setupNavbarScrollBehavior()
 
+        // Title + Search (init early)
+        trendingTitle = findViewById(R.id.trendingTitle)
+        searchEditText = findViewById(R.id.searchEditText)
+
+        // =========================
+        // Init BOTH RecyclerViews EARLY (fix crash)
+        // =========================
+        // Trending Meals (Horizontal)
+        rvTrendingMeals = findViewById(R.id.rvRecommendedMeals)
+        mealAdapter = MealAdapter(mutableListOf()) { meal ->
+            // TODO: Navigate to detail page using meal.idMeal
+        }
+        rvTrendingMeals.layoutManager =
+            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        rvTrendingMeals.adapter = mealAdapter
+
+        // Search Results (Grid 2 columns)
+        rvSearchResults = findViewById(R.id.rvSearchResults)
+        searchAdapter = SearchMealAdapter(mutableListOf()) { meal ->
+            // TODO: Navigate to detail page using meal.idMeal
+        }
+        rvSearchResults.layoutManager = GridLayoutManager(this, 2)
+        rvSearchResults.isNestedScrollingEnabled = false
+        rvSearchResults.setHasFixedSize(false)
+        rvSearchResults.adapter = searchAdapter
+        rvSearchResults.visibility = View.GONE
+
+        // Set initial state safely
+        showTrendingUI()
+
+        // Now safe to setup search listeners
+        setupSearchBackendTest()
+
+        // Buttons
         signInBtn.setOnClickListener {
             startActivity(Intent(this, LoginActivity::class.java))
         }
@@ -101,29 +157,21 @@ class MainActivity : AppCompatActivity() {
                     val header = rightDrawer.getHeaderView(0)
                     header.findViewById<TextView>(R.id.drawerName).text = "Guest"
                     header.findViewById<TextView>(R.id.drawerEmail).text = ""
-
                     true
                 }
                 else -> false
             }
         }
 
-        // =========================
-        // Recommended Meals
-        // =========================
-        val mealRecyclerView = findViewById<RecyclerView>(R.id.rvRecommendedMeals)
-
-        mealAdapter = MealAdapter(mutableListOf()) { meal ->
-            // TODO: Navigate to detail page using meal.idMeal
-        }
-
-        mealRecyclerView.layoutManager =
-            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        mealRecyclerView.adapter = mealAdapter
-
+        // Collect trending/random meals from VM (SAFE now)
         lifecycleScope.launch {
             viewModel.meals.collect { meals ->
-                mealAdapter.updateMeals(meals)
+                latestTrendingMeals = meals
+                val q = searchEditText.text?.toString()?.trim().orEmpty()
+                if (q.isBlank()) {
+                    showTrendingUI()
+                    mealAdapter.updateMeals(meals)
+                }
             }
         }
         viewModel.loadRandomMeals()
@@ -163,6 +211,18 @@ class MainActivity : AppCompatActivity() {
         updateTopBar()
     }
 
+    private fun showTrendingUI() {
+        trendingTitle.text = "Trending Meals"
+        rvTrendingMeals.visibility = View.VISIBLE
+        rvSearchResults.visibility = View.GONE
+    }
+
+    private fun showSearchUI(query: String) {
+        trendingTitle.text = "Search results for \"$query\""
+        rvTrendingMeals.visibility = View.GONE
+        rvSearchResults.visibility = View.VISIBLE
+    }
+
     private fun updateTopBar() {
         val loggedIn = auth.currentUser != null
         signInBtn.visibility = if (loggedIn) View.GONE else View.VISIBLE
@@ -197,10 +257,70 @@ class MainActivity : AppCompatActivity() {
     }
 
     // ==========================================================
+    // SEARCH (UI + Logcat)
+    // ==========================================================
+    private fun setupSearchBackendTest() {
+
+        // Debounce typing
+        searchEditText.addTextChangedListener { editable ->
+            val q = editable?.toString().orEmpty().trim()
+
+            searchJob?.cancel()
+            searchJob = lifecycleScope.launch {
+                delay(400)
+
+                if (q.isBlank()) {
+                    Log.d("MEAL_SEARCH", "Query empty -> restore trending/random")
+                    showTrendingUI()
+                    mealAdapter.updateMeals(latestTrendingMeals)
+                    return@launch
+                }
+
+                runSearchAndLog(q)
+            }
+        }
+
+        // IME actionSearch
+        searchEditText.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                val q = searchEditText.text?.toString().orEmpty().trim()
+                searchJob?.cancel()
+
+                lifecycleScope.launch {
+                    if (q.isBlank()) {
+                        Log.d("MEAL_SEARCH", "IME search pressed but query empty -> restore trending")
+                        showTrendingUI()
+                        mealAdapter.updateMeals(latestTrendingMeals)
+                    } else {
+                        runSearchAndLog(q)
+                    }
+                }
+                true
+            } else false
+        }
+    }
+
+    private suspend fun runSearchAndLog(query: String) {
+        try {
+            Log.d("MEAL_SEARCH", "Searching: \"$query\" ...")
+            val results = repo.searchAll(query)
+            Log.d("MEAL_SEARCH", "Results count = ${results.size}")
+
+            showSearchUI(query)
+            searchAdapter.updateMeals(results)
+
+        } catch (e: Exception) {
+            Log.e("MEAL_SEARCH", "Search failed: ${e.message}", e)
+            showSearchUI(query)
+            searchAdapter.updateMeals(emptyList())
+        }
+    }
+
+    // ==========================================================
     // NAVBAR SCROLL IMPLEMENTATION (transparent at top, white when scroll)
     // ==========================================================
     private fun setupNavbarScrollBehavior() {
-        val thresholdPx = dpToPx(8) // change when scrollY > 8dp
+        val thresholdPx = dpToPx(8)
 
         scrollView.setOnScrollChangeListener { _, _, scrollY, _, _ ->
             val shouldBeScrolledStyle = scrollY > thresholdPx
@@ -213,42 +333,30 @@ class MainActivity : AppCompatActivity() {
 
     private fun applyNavbarStyle(scrolled: Boolean) {
         if (scrolled) {
-            // White navbar
             topNavbar.setBackgroundColor(Color.WHITE)
-
-            // Logo text color
             tvMeal.setTextColor(Color.BLACK)
-            // tvMatch stays orange as in xml
 
-            // Sign in button (black outline on white)
             signInBtn.setTextColor(Color.WHITE)
             signInBtn.iconTint = ColorStateList.valueOf(Color.WHITE)
             signInBtn.strokeColor = ColorStateList.valueOf(Color.BLACK)
             signInBtn.backgroundTintList = ColorStateList.valueOf(Color.BLACK)
 
-            // Profile icon swap to black (you must have this drawable)
             profileBtn.setImageResource(R.drawable.ic_profile_black)
             profileBtn.strokeColor = ColorStateList.valueOf(Color.BLACK)
             profileBtn.strokeWidth = dpToPx(1).toFloat()
-
         } else {
-            // Transparent navbar (on top of header image)
             topNavbar.setBackgroundColor(Color.TRANSPARENT)
-
-            // Logo text color
             tvMeal.setTextColor(Color.WHITE)
 
-            // Sign in button (your original)
             signInBtn.setTextColor(Color.WHITE)
             signInBtn.iconTint = ColorStateList.valueOf(Color.WHITE)
             signInBtn.strokeColor = ColorStateList.valueOf(Color.WHITE)
-            signInBtn.backgroundTintList = ContextCompat.getColorStateList(this, R.color.signin_bg_states)
+            signInBtn.backgroundTintList =
+                ContextCompat.getColorStateList(this, R.color.signin_bg_states)
 
-            // Profile icon swap back to white
             profileBtn.setImageResource(R.drawable.ic_profile_white)
             profileBtn.strokeColor = ColorStateList.valueOf(Color.WHITE)
             profileBtn.strokeWidth = dpToPx(1).toFloat()
-
         }
     }
 
