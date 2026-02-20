@@ -141,7 +141,10 @@ class MainActivity : AppCompatActivity() {
             Ingredient("Turkey Ham", "https://www.themealdb.com/images/ingredients/Turkey_Ham.png"),
             Ingredient("Corn Flour", "https://www.themealdb.com/images/ingredients/corn_flour.png")
         )
-        ingredientAdapter = IngredientAdapter(ingredients)
+        ingredientAdapter = IngredientAdapter(ingredients) { ing ->
+            runIngredientSearch(ing.name)
+        }
+
         rvIngredients.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         rvIngredients.adapter = ingredientAdapter
@@ -472,6 +475,44 @@ class MainActivity : AppCompatActivity() {
             profileBtn.setImageResource(R.drawable.ic_profile_white)
             profileBtn.strokeColor = ColorStateList.valueOf(Color.WHITE)
             profileBtn.strokeWidth = dpToPx(1).toFloat()
+        }
+    }
+    private fun runIngredientSearch(ingredientName: String) {
+        val q = ingredientName.trim()
+        if (q.isBlank()) return
+
+        // optional: show in search box
+        searchEditText.setText(q)
+
+        searchJob?.cancel()
+        searchJob = lifecycleScope.launch {
+            try {
+                Log.d("MEAL_ING", "Searching ingredient: \"$q\" ...")
+
+                val results = repo.searchAll(q) // your repo already merges name + ingredient
+                Log.d("MEAL_ING", "Results count = ${results.size}")
+
+                lastQuery = q
+                lastResults = ArrayList(results)
+
+                showSearchUI("Meals with \"$q\"", results.size)
+
+                val preview = results.take(HOME_PREVIEW_LIMIT)
+                searchAdapter.setMeals(preview)
+
+                scrollView.post {
+                    val anchor = findViewById<View>(R.id.searchRow)
+                    scrollView.smoothScrollTo(0, anchor.top)
+                }
+
+            } catch (e: Exception) {
+                Log.e("MEAL_ING", "Ingredient search failed: ${e.message}", e)
+                showSearchUI("Meals with \"$q\"", 0)
+                searchAdapter.setMeals(emptyList())
+                viewAllText.visibility = View.GONE
+                lastQuery = ""
+                lastResults = arrayListOf()
+            }
         }
     }
 
