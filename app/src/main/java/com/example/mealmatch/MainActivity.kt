@@ -4,8 +4,8 @@ import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
-import android.util.Log
 import android.view.View
+import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.TextView
 import androidx.activity.viewModels
@@ -31,7 +31,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), MealFilterBottomSheet.FilterListener {
 
     private val viewModel: MealViewModel by viewModels()
 
@@ -63,18 +63,19 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvMatch: TextView
     private var isScrolledStyle = false
 
-    // Search
+    // Search + Title
     private lateinit var searchEditText: TextInputEditText
     private lateinit var trendingTitle: TextView
     private lateinit var viewAllText: TextView
-    private val repo = MealRepository()
-    private var searchJob: Job? = null
 
-    // Keep last trending/random list for restore
+    private val repo = MealRepository()
+    private var job: Job? = null
+
+    // Keep last trending list for restore
     private var latestTrendingMeals: List<Meal> = emptyList()
 
-    // Home preview: keep last query + full results for View All page
-    private var lastQuery: String = ""
+    // For View All screen (Search / A-Z / Ingredient / Filter all use this)
+    private var lastQueryTitle: String = ""
     private var lastResults: ArrayList<Meal> = arrayListOf()
 
     private val HOME_PREVIEW_LIMIT = 6
@@ -96,7 +97,7 @@ class MainActivity : AppCompatActivity() {
         signInBtn = findViewById(R.id.signInBtn)
         profileBtn = findViewById(R.id.profileBtn)
 
-        // ScrollView
+        // Scroll
         scrollView = findViewById(R.id.mainContent)
         setupNavbarScrollBehavior()
 
@@ -105,31 +106,23 @@ class MainActivity : AppCompatActivity() {
         viewAllText = findViewById(R.id.viewAllText)
         searchEditText = findViewById(R.id.searchEditText)
 
-        // =========================
-        // RecyclerViews
-        // =========================
-
-        // Trending Meals (Horizontal)
+        // Trending RV
         rvTrendingMeals = findViewById(R.id.rvRecommendedMeals)
-        mealAdapter = MealAdapter(mutableListOf()) { meal ->
-            // TODO: Navigate to detail page using meal.idMeal
-        }
+        mealAdapter = MealAdapter(mutableListOf()) { /* open detail if you want */ }
         rvTrendingMeals.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         rvTrendingMeals.adapter = mealAdapter
 
-        // Search Results (Grid preview on home)
+        // Search preview RV
         rvSearchResults = findViewById(R.id.rvSearchResults)
-        searchAdapter = SearchMealAdapter(mutableListOf()) { meal ->
-            // TODO: Navigate to detail page using meal.idMeal
-        }
+        searchAdapter = SearchMealAdapter(mutableListOf()) { /* open detail if you want */ }
         rvSearchResults.layoutManager = GridLayoutManager(this, 2)
-        rvSearchResults.isNestedScrollingEnabled = false // inside NestedScrollView
+        rvSearchResults.isNestedScrollingEnabled = false
         rvSearchResults.setHasFixedSize(false)
         rvSearchResults.adapter = searchAdapter
         rvSearchResults.visibility = View.GONE
 
-        // Ingredients (Horizontal)
+        // Ingredients RV (clickable)
         rvIngredients = findViewById(R.id.rvIngredients)
         val ingredients = listOf(
             Ingredient("Chicken", "https://www.themealdb.com/images/ingredients/chicken.png"),
@@ -144,46 +137,49 @@ class MainActivity : AppCompatActivity() {
         ingredientAdapter = IngredientAdapter(ingredients) { ing ->
             runIngredientSearch(ing.name)
         }
-
         rvIngredients.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         rvIngredients.adapter = ingredientAdapter
 
-        // Initial UI state
+        // Initial UI
         showTrendingUI()
 
-        // ✅ A–Z click listeners
+        // A–Z footer click
         setupAlphaBar()
 
-        // Search listeners
-        setupSearchBackendTest()
+        // Search
+        setupSearchBackend()
 
-        // View All -> open new page with all results (works for Search + A–Z)
+        // View All
         viewAllText.setOnClickListener {
             if (lastResults.isNotEmpty()) {
                 val intent = Intent(this, SearchResultsActivity::class.java)
-                intent.putExtra(SearchResultsActivity.EXTRA_QUERY, lastQuery)
+                intent.putExtra(SearchResultsActivity.EXTRA_QUERY, lastQueryTitle)
                 intent.putParcelableArrayListExtra(SearchResultsActivity.EXTRA_MEALS, lastResults)
                 startActivity(intent)
             }
         }
 
-        // Buttons
+        // Sign In
         signInBtn.setOnClickListener {
             startActivity(Intent(this, LoginActivity::class.java))
         }
 
+        // Profile (drawer)
         profileBtn.setOnClickListener {
             drawerLayout.openDrawer(GravityCompat.END)
             loadDrawerUserInfo()
         }
 
+        // Filter button
         val filterBtn = findViewById<MaterialButton>(R.id.filterBtn)
         filterBtn.setOnClickListener {
-            MealFilterBottomSheet().show(supportFragmentManager, MealFilterBottomSheet.TAG)
+            val sheet = MealFilterBottomSheet()
+            sheet.setFilterListener(this)
+            sheet.show(supportFragmentManager, MealFilterBottomSheet.TAG)
         }
 
-        // Drawer menu actions
+        // Drawer menu
         rightDrawer.setNavigationItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.menu_favorites -> {
@@ -191,10 +187,10 @@ class MainActivity : AppCompatActivity() {
                     drawerLayout.closeDrawer(GravityCompat.END)
                     true
                 }
+
                 R.id.menu_logout -> {
                     auth.signOut()
                     drawerLayout.closeDrawer(GravityCompat.END)
-
                     updateTopBar()
 
                     val header = rightDrawer.getHeaderView(0)
@@ -202,22 +198,19 @@ class MainActivity : AppCompatActivity() {
                     header.findViewById<TextView>(R.id.drawerEmail).text = ""
                     true
                 }
+
                 else -> false
             }
         }
 
-        // Collect trending/random meals from VM
+        // Trending meals stream
         lifecycleScope.launch {
             viewModel.meals.collect { meals ->
                 latestTrendingMeals = meals
-                val q = searchEditText.text?.toString()?.trim().orEmpty()
-                if (q.isBlank()) {
+                if (searchEditText.text.isNullOrBlank()) {
                     showTrendingUI()
                     mealAdapter.updateMeals(meals)
-
-                    // when we go back to trending, clear "View All" data
-                    lastQuery = ""
-                    lastResults = arrayListOf()
+                    clearViewAllPayload()
                 }
             }
         }
@@ -236,26 +229,147 @@ class MainActivity : AppCompatActivity() {
         updateTopBar()
     }
 
+    // =========================
+    // Filter callback (from BottomSheet)
+    // =========================
+    override fun onFilterSelected(categories: List<String>, areas: List<String>) {
+        runFilter(categories, areas)
+    }
+
+    private fun runFilter(categories: List<String>, areas: List<String>) {
+        job?.cancel()
+        job = lifecycleScope.launch {
+            val results = repo.filterMulti(categories, areas)
+
+            lastQueryTitle = buildFilterTitle(categories, areas)
+            lastResults = ArrayList(results)
+
+            showSearchUI(lastQueryTitle, results.size)
+            searchAdapter.setMeals(results.take(HOME_PREVIEW_LIMIT))
+
+            scrollToResults()
+        }
+    }
+
+    private fun buildFilterTitle(categories: List<String>, areas: List<String>): String {
+        val c = categories.joinToString(", ")
+        val a = areas.joinToString(", ")
+
+        return when {
+            categories.isNotEmpty() && areas.isNotEmpty() -> "Filtered: $c • $a"
+            categories.isNotEmpty() -> "Filtered: $c"
+            areas.isNotEmpty() -> "Filtered: $a"
+            else -> "Filtered Results"
+        }
+    }
+
+    // =========================
+    // Search (typed)
+    // =========================
+    private fun setupSearchBackend() {
+        searchEditText.addTextChangedListener { editable ->
+            val q = editable?.toString().orEmpty().trim()
+
+            job?.cancel()
+            job = lifecycleScope.launch {
+                delay(400)
+
+                if (q.isBlank()) {
+                    showTrendingUI()
+                    mealAdapter.updateMeals(latestTrendingMeals)
+                    rvSearchResults.visibility = View.GONE
+                    searchAdapter.setMeals(emptyList())
+                    viewAllText.visibility = View.GONE
+                    clearViewAllPayload()
+                    return@launch
+                }
+
+                val results = repo.searchAll(q)
+
+                lastQueryTitle = "Search results for \"$q\""
+                lastResults = ArrayList(results)
+
+                showSearchUI(lastQueryTitle, results.size)
+                searchAdapter.setMeals(results.take(HOME_PREVIEW_LIMIT))
+
+                scrollToResults()
+            }
+        }
+
+        searchEditText.setOnEditorActionListener { _, actionId, _ ->
+            actionId == EditorInfo.IME_ACTION_SEARCH
+        }
+    }
+
+    // =========================
+    // A–Z Footer (click)
+    // =========================
+    private fun setupAlphaBar() {
+        val alphaBar = findViewById<View>(R.id.alphaBar) as? ViewGroup ?: return
+
+        for (i in 0 until alphaBar.childCount) {
+            val child = alphaBar.getChildAt(i)
+            if (child is TextView) {
+                child.setOnClickListener {
+                    val letter = (child.tag as? String) ?: child.text.toString()
+                    runAlphaSearch(letter)
+                }
+            }
+        }
+    }
+
+    private fun runAlphaSearch(letter: String) {
+        val q = letter.trim()
+        if (q.isBlank()) return
+
+        // This triggers normal search flow too (good UX)
+        searchEditText.setText(q)
+    }
+
+    // =========================
+    // Ingredient click
+    // =========================
+    private fun runIngredientSearch(ingredientName: String) {
+        val q = ingredientName.trim()
+        if (q.isBlank()) return
+
+        // This triggers normal search flow too (good UX)
+        searchEditText.setText(q)
+    }
+
+    // =========================
+    // UI state
+    // =========================
     private fun showTrendingUI() {
         trendingTitle.text = "Trending Meals"
         rvTrendingMeals.visibility = View.VISIBLE
         rvSearchResults.visibility = View.GONE
-
-        // View All is allowed to show always (your choice)
-        viewAllText.visibility = View.VISIBLE
-        viewAllText.text = "View All"
+        viewAllText.visibility = View.GONE
     }
 
     private fun showSearchUI(title: String, totalCount: Int) {
         trendingTitle.text = title
         rvTrendingMeals.visibility = View.GONE
         rvSearchResults.visibility = View.VISIBLE
-
-        // show View All only if more than 6 results
         viewAllText.visibility = if (totalCount > HOME_PREVIEW_LIMIT) View.VISIBLE else View.GONE
         viewAllText.text = "View All"
     }
 
+    private fun scrollToResults() {
+        scrollView.post {
+            val anchor = findViewById<View>(R.id.searchRow)
+            scrollView.smoothScrollTo(0, anchor.top)
+        }
+    }
+
+    private fun clearViewAllPayload() {
+        lastQueryTitle = ""
+        lastResults = arrayListOf()
+    }
+
+    // =========================
+    // Top bar + drawer
+    // =========================
     private fun updateTopBar() {
         val loggedIn = auth.currentUser != null
         signInBtn.visibility = if (loggedIn) View.GONE else View.VISIBLE
@@ -273,8 +387,7 @@ class MainActivity : AppCompatActivity() {
 
         db.collection("users").document(user.uid).get()
             .addOnSuccessListener { doc ->
-                val name = doc.getString("name") ?: "User"
-                nameTv.text = name
+                nameTv.text = doc.getString("name") ?: "User"
             }
             .addOnFailureListener {
                 nameTv.text = "User"
@@ -289,162 +402,17 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // ==========================================================
-    // ✅ A–Z Footer click (reuses repo.searchAll(letter))
-    // ==========================================================
-    private fun setupAlphaBar() {
-        val alphaBar = findViewById<View>(R.id.alphaBar) as? android.view.ViewGroup ?: return
-
-        for (i in 0 until alphaBar.childCount) {
-            val child = alphaBar.getChildAt(i)
-            if (child is TextView) {
-                child.setOnClickListener {
-                    val letter = (child.tag as? String) ?: child.text.toString()
-                    runAlphaSearch(letter)
-                }
-            }
-        }
-    }
-
-    private fun runAlphaSearch(letter: String) {
-        val q = letter.trim()
-        if (q.isBlank()) return
-
-        // optional: also reflect in search box
-        searchEditText.setText(q)
-
-        searchJob?.cancel()
-        searchJob = lifecycleScope.launch {
-            try {
-                Log.d("MEAL_ALPHA", "Searching by letter: \"$q\" ...")
-
-                val results = repo.searchAll(q)
-                Log.d("MEAL_ALPHA", "Results count = ${results.size}")
-
-                // store full results for View All page
-                lastQuery = q
-                lastResults = ArrayList(results)
-
-                showSearchUI("Meals starting with \"$q\"", results.size)
-
-                // home shows ONLY 6 items
-                val preview = results.take(HOME_PREVIEW_LIMIT)
-                searchAdapter.setMeals(preview)
-
-                // scroll to results area
-                scrollView.post {
-                    val anchor = findViewById<View>(R.id.searchRow)
-                    scrollView.smoothScrollTo(0, anchor.top)
-                }
-
-            } catch (e: Exception) {
-                Log.e("MEAL_ALPHA", "Alpha search failed: ${e.message}", e)
-                showSearchUI("Meals starting with \"$q\"", 0)
-                searchAdapter.setMeals(emptyList())
-                viewAllText.visibility = View.GONE
-                lastQuery = ""
-                lastResults = arrayListOf()
-            }
-        }
-    }
-
-    // ==========================================================
-    // SEARCH (Home preview: show only 6, View All opens new Activity)
-    // ==========================================================
-    private fun setupSearchBackendTest() {
-        searchEditText.addTextChangedListener { editable ->
-            val q = editable?.toString().orEmpty().trim()
-
-            searchJob?.cancel()
-            searchJob = lifecycleScope.launch {
-                delay(400)
-
-                if (q.isBlank()) {
-                    Log.d("MEAL_SEARCH", "Query empty -> restore trending/random")
-                    showTrendingUI()
-                    mealAdapter.updateMeals(latestTrendingMeals)
-
-                    // clear search preview + view all data
-                    rvSearchResults.visibility = View.GONE
-                    searchAdapter.setMeals(emptyList())
-                    viewAllText.visibility = View.VISIBLE
-                    lastQuery = ""
-                    lastResults = arrayListOf()
-                    return@launch
-                }
-
-                runSearchAndLog(q)
-            }
-        }
-
-        searchEditText.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                val q = searchEditText.text?.toString().orEmpty().trim()
-                searchJob?.cancel()
-
-                lifecycleScope.launch {
-                    if (q.isBlank()) {
-                        Log.d("MEAL_SEARCH", "IME search pressed but query empty -> restore trending")
-                        showTrendingUI()
-                        mealAdapter.updateMeals(latestTrendingMeals)
-
-                        rvSearchResults.visibility = View.GONE
-                        searchAdapter.setMeals(emptyList())
-                        viewAllText.visibility = View.VISIBLE
-                        lastQuery = ""
-                        lastResults = arrayListOf()
-                    } else {
-                        runSearchAndLog(q)
-                    }
-                }
-                true
-            } else false
-        }
-    }
-
-    private suspend fun runSearchAndLog(query: String) {
-        try {
-            Log.d("MEAL_SEARCH", "Searching: \"$query\" ...")
-            val results = repo.searchAll(query)
-            Log.d("MEAL_SEARCH", "Results count = ${results.size}")
-
-            // store full results for View All screen
-            lastQuery = query
-            lastResults = ArrayList(results)
-
-            showSearchUI("Search results for \"$query\"", results.size)
-
-            // home shows ONLY 6 items
-            val preview = results.take(HOME_PREVIEW_LIMIT)
-            searchAdapter.setMeals(preview)
-
-            // scroll to results area
-            scrollView.post {
-                val anchor = findViewById<View>(R.id.searchRow)
-                scrollView.smoothScrollTo(0, anchor.top)
-            }
-
-        } catch (e: Exception) {
-            Log.e("MEAL_SEARCH", "Search failed: ${e.message}", e)
-            showSearchUI("Search results for \"$query\"", 0)
-            searchAdapter.setMeals(emptyList())
-            viewAllText.visibility = View.GONE
-            lastQuery = ""
-            lastResults = arrayListOf()
-        }
-    }
-
-    // ==========================================================
-    // NAVBAR SCROLL IMPLEMENTATION
-    // ==========================================================
+    // =========================
+    // Navbar scroll
+    // =========================
     private fun setupNavbarScrollBehavior() {
         val thresholdPx = dpToPx(8)
 
         scrollView.setOnScrollChangeListener { _, _, scrollY, _, _ ->
-            val shouldBeScrolledStyle = scrollY > thresholdPx
-            if (shouldBeScrolledStyle != isScrolledStyle) {
-                isScrolledStyle = shouldBeScrolledStyle
-                applyNavbarStyle(scrolled = shouldBeScrolledStyle)
+            val shouldBeScrolled = scrollY > thresholdPx
+            if (shouldBeScrolled != isScrolledStyle) {
+                isScrolledStyle = shouldBeScrolled
+                applyNavbarStyle(scrolled = shouldBeScrolled)
             }
         }
     }
@@ -475,44 +443,6 @@ class MainActivity : AppCompatActivity() {
             profileBtn.setImageResource(R.drawable.ic_profile_white)
             profileBtn.strokeColor = ColorStateList.valueOf(Color.WHITE)
             profileBtn.strokeWidth = dpToPx(1).toFloat()
-        }
-    }
-    private fun runIngredientSearch(ingredientName: String) {
-        val q = ingredientName.trim()
-        if (q.isBlank()) return
-
-        // optional: show in search box
-        searchEditText.setText(q)
-
-        searchJob?.cancel()
-        searchJob = lifecycleScope.launch {
-            try {
-                Log.d("MEAL_ING", "Searching ingredient: \"$q\" ...")
-
-                val results = repo.searchAll(q) // your repo already merges name + ingredient
-                Log.d("MEAL_ING", "Results count = ${results.size}")
-
-                lastQuery = q
-                lastResults = ArrayList(results)
-
-                showSearchUI("Meals with \"$q\"", results.size)
-
-                val preview = results.take(HOME_PREVIEW_LIMIT)
-                searchAdapter.setMeals(preview)
-
-                scrollView.post {
-                    val anchor = findViewById<View>(R.id.searchRow)
-                    scrollView.smoothScrollTo(0, anchor.top)
-                }
-
-            } catch (e: Exception) {
-                Log.e("MEAL_ING", "Ingredient search failed: ${e.message}", e)
-                showSearchUI("Meals with \"$q\"", 0)
-                searchAdapter.setMeals(emptyList())
-                viewAllText.visibility = View.GONE
-                lastQuery = ""
-                lastResults = arrayListOf()
-            }
         }
     }
 
