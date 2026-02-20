@@ -29,7 +29,7 @@ class SignUpActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_sign_up)
 
-        // ✅ IMPORTANT: initialize Firebase BEFORE getInstance()
+        //IMPORTANT: initialize Firebase BEFORE getInstance()
         FirebaseApp.initializeApp(this)
         Log.d(TAG, "FirebaseApp initialized")
 

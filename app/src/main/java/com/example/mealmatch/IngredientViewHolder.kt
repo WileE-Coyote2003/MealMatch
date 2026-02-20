@@ -1,3 +1,4 @@
+
 package com.example.mealmatch
 
 import android.view.View
@@ -9,3 +10,4 @@ class IngredientViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     val imgIngredient: ImageView = itemView.findViewById(R.id.imgIngredient)
     val txtIngredientName: TextView = itemView.findViewById(R.id.txtIngredientName)
 }
+
