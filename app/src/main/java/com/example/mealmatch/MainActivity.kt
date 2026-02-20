@@ -149,10 +149,13 @@ class MainActivity : AppCompatActivity() {
         // Initial UI state
         showTrendingUI()
 
+        // ✅ A–Z click listeners
+        setupAlphaBar()
+
         // Search listeners
         setupSearchBackendTest()
 
-        // View All -> open new page with all results + pagination there
+        // View All -> open new page with all results (works for Search + A–Z)
         viewAllText.setOnClickListener {
             if (lastResults.isNotEmpty()) {
                 val intent = Intent(this, SearchResultsActivity::class.java)
@@ -208,6 +211,10 @@ class MainActivity : AppCompatActivity() {
                 if (q.isBlank()) {
                     showTrendingUI()
                     mealAdapter.updateMeals(meals)
+
+                    // when we go back to trending, clear "View All" data
+                    lastQuery = ""
+                    lastResults = arrayListOf()
                 }
             }
         }
@@ -231,17 +238,17 @@ class MainActivity : AppCompatActivity() {
         rvTrendingMeals.visibility = View.VISIBLE
         rvSearchResults.visibility = View.GONE
 
-        // View All hidden on trending
-        viewAllText.visibility = View.VISIBLE // keep visible if you want always
+        // View All is allowed to show always (your choice)
+        viewAllText.visibility = View.VISIBLE
         viewAllText.text = "View All"
     }
 
-    private fun showSearchUI(query: String, totalCount: Int) {
-        trendingTitle.text = "Search results for \"$query\""
+    private fun showSearchUI(title: String, totalCount: Int) {
+        trendingTitle.text = title
         rvTrendingMeals.visibility = View.GONE
         rvSearchResults.visibility = View.VISIBLE
 
-        // Show View All only if more than 6 results
+        // show View All only if more than 6 results
         viewAllText.visibility = if (totalCount > HOME_PREVIEW_LIMIT) View.VISIBLE else View.GONE
         viewAllText.text = "View All"
     }
@@ -280,10 +287,68 @@ class MainActivity : AppCompatActivity() {
     }
 
     // ==========================================================
+    // ✅ A–Z Footer click (reuses repo.searchAll(letter))
+    // ==========================================================
+    private fun setupAlphaBar() {
+        val alphaBar = findViewById<View>(R.id.alphaBar) as? android.view.ViewGroup ?: return
+
+        for (i in 0 until alphaBar.childCount) {
+            val child = alphaBar.getChildAt(i)
+            if (child is TextView) {
+                child.setOnClickListener {
+                    val letter = (child.tag as? String) ?: child.text.toString()
+                    runAlphaSearch(letter)
+                }
+            }
+        }
+    }
+
+    private fun runAlphaSearch(letter: String) {
+        val q = letter.trim()
+        if (q.isBlank()) return
+
+        // optional: also reflect in search box
+        searchEditText.setText(q)
+
+        searchJob?.cancel()
+        searchJob = lifecycleScope.launch {
+            try {
+                Log.d("MEAL_ALPHA", "Searching by letter: \"$q\" ...")
+
+                val results = repo.searchAll(q)
+                Log.d("MEAL_ALPHA", "Results count = ${results.size}")
+
+                // store full results for View All page
+                lastQuery = q
+                lastResults = ArrayList(results)
+
+                showSearchUI("Meals starting with \"$q\"", results.size)
+
+                // home shows ONLY 6 items
+                val preview = results.take(HOME_PREVIEW_LIMIT)
+                searchAdapter.setMeals(preview)
+
+                // scroll to results area
+                scrollView.post {
+                    val anchor = findViewById<View>(R.id.searchRow)
+                    scrollView.smoothScrollTo(0, anchor.top)
+                }
+
+            } catch (e: Exception) {
+                Log.e("MEAL_ALPHA", "Alpha search failed: ${e.message}", e)
+                showSearchUI("Meals starting with \"$q\"", 0)
+                searchAdapter.setMeals(emptyList())
+                viewAllText.visibility = View.GONE
+                lastQuery = ""
+                lastResults = arrayListOf()
+            }
+        }
+    }
+
+    // ==========================================================
     // SEARCH (Home preview: show only 6, View All opens new Activity)
     // ==========================================================
     private fun setupSearchBackendTest() {
-
         searchEditText.addTextChangedListener { editable ->
             val q = editable?.toString().orEmpty().trim()
 
@@ -296,10 +361,10 @@ class MainActivity : AppCompatActivity() {
                     showTrendingUI()
                     mealAdapter.updateMeals(latestTrendingMeals)
 
-                    // clear search preview + view all
+                    // clear search preview + view all data
                     rvSearchResults.visibility = View.GONE
                     searchAdapter.setMeals(emptyList())
-                    viewAllText.visibility = View.VISIBLE // keep if you want always visible
+                    viewAllText.visibility = View.VISIBLE
                     lastQuery = ""
                     lastResults = arrayListOf()
                     return@launch
@@ -344,7 +409,7 @@ class MainActivity : AppCompatActivity() {
             lastQuery = query
             lastResults = ArrayList(results)
 
-            showSearchUI(query, results.size)
+            showSearchUI("Search results for \"$query\"", results.size)
 
             // home shows ONLY 6 items
             val preview = results.take(HOME_PREVIEW_LIMIT)
@@ -358,7 +423,7 @@ class MainActivity : AppCompatActivity() {
 
         } catch (e: Exception) {
             Log.e("MEAL_SEARCH", "Search failed: ${e.message}", e)
-            showSearchUI(query, 0)
+            showSearchUI("Search results for \"$query\"", 0)
             searchAdapter.setMeals(emptyList())
             viewAllText.visibility = View.GONE
             lastQuery = ""
