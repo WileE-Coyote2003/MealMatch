@@ -19,5 +19,13 @@ interface MealApiService {
     @GET("api/json/v2/65232507/filter.php")
     suspend fun filterByIngredient(@Query("i") ingredient: String): MealFilterResponse
 
+    // Filter by category
+    @GET("api/json/v2/65232507/filter.php")
+    suspend fun filterByCategory(@Query("c") category: String): MealFilterResponse
+
+    // Filter by area
+    @GET("api/json/v2/65232507/filter.php")
+    suspend fun filterByArea(@Query("a") area: String): MealFilterResponse
+
 
 }

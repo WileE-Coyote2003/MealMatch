@@ -9,30 +9,22 @@ class MealRepository {
         return RetrofitClient.api.getRandomMeals().meals ?: emptyList()
     }
 
-    /**
-     * One search box for:
-     * - first letter (if 1 char)
-     * - meal name + ingredient (merge results, remove duplicates)
-     */
     suspend fun searchAll(query: String): List<Meal> {
         val q = query.trim()
         if (q.isBlank()) return emptyList()
 
-        // 1 letter => first-letter search
         if (q.length == 1 && q[0].isLetter()) {
             return RetrofitClient.api
                 .searchByFirstLetter(q.lowercase())
                 .meals ?: emptyList()
         }
 
-        // otherwise: do both name + ingredient and merge
         return coroutineScope {
             val byNameDeferred = async {
                 RetrofitClient.api.searchByMealName(q).meals ?: emptyList()
             }
 
             val byIngDeferred = async {
-                // TheMealDB ingredient often uses underscore
                 val ingredient = q.lowercase().replace(" ", "_")
                 (RetrofitClient.api.filterByIngredient(ingredient).meals ?: emptyList())
                     .map { it.toMeal() }
@@ -41,5 +33,47 @@ class MealRepository {
             val merged = byNameDeferred.await() + byIngDeferred.await()
             merged.distinctBy { it.idMeal }
         }
+    }
+
+    // ✅ NEW: multi filter (categories + areas)
+    suspend fun filterMulti(categories: List<String>, areas: List<String>): List<Meal> = coroutineScope {
+        val cat = categories.map { it.trim() }.filter { it.isNotEmpty() }
+        val ar = areas.map { it.trim() }.filter { it.isNotEmpty() }
+
+        if (cat.isEmpty() && ar.isEmpty()) return@coroutineScope emptyList()
+
+        val categoriesDeferred = async {
+            if (cat.isEmpty()) emptyList()
+            else {
+                val all = cat.flatMap { c ->
+                    (RetrofitClient.api.filterByCategory(c).meals ?: emptyList())
+                }
+                all.distinctBy { it.idMeal }.map { it.toMeal() }
+            }
+        }
+
+        val areasDeferred = async {
+            if (ar.isEmpty()) emptyList()
+            else {
+                val all = ar.flatMap { a ->
+                    (RetrofitClient.api.filterByArea(a).meals ?: emptyList())
+                }
+                all.distinctBy { it.idMeal }.map { it.toMeal() }
+            }
+        }
+
+        val catMeals = categoriesDeferred.await()
+        val areaMeals = areasDeferred.await()
+
+        val result = when {
+            cat.isNotEmpty() && ar.isNotEmpty() -> {
+                val areaSet = areaMeals.map { it.idMeal }.toHashSet()
+                catMeals.filter { areaSet.contains(it.idMeal) }
+            }
+            cat.isNotEmpty() -> catMeals
+            else -> areaMeals
+        }
+
+        result.distinctBy { it.idMeal }
     }
 }
