@@ -7,7 +7,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.squareup.picasso.Picasso
 
 class IngredientAdapter(
-    private val ingredients: List<Ingredient>
+    private val ingredients: List<Ingredient>,
+    private val onClick: (Ingredient) -> Unit = {}   // ✅ default fixes your error
 ) : RecyclerView.Adapter<IngredientViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): IngredientViewHolder {
@@ -26,6 +27,8 @@ class IngredientAdapter(
             .fit()
             .centerCrop()
             .into(holder.imgIngredient)
+
+        holder.itemView.setOnClickListener { onClick(ingredient) }  // ✅ clickable
     }
 
     override fun getItemCount(): Int = ingredients.size

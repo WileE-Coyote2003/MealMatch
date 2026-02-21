@@ -30,6 +30,16 @@
         <activity android:name=".LoginActivity" android:exported="false" />
         <activity android:name=".SignUpActivity" android:exported="false" />
 
+        <activity
+            android:name=".SearchResultsActivity"
+            android:exported="false" />
+        <!-- Main screen (launcher / default) -->
+        <activity
+            android:name=".LoginActivity"
+            android:exported="false" /> <!-- Sign Up screen -->
+        <activity
+            android:name=".SignUpActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

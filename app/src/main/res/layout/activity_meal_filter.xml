@@ -259,151 +259,187 @@
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_uk"
-                    android:text="United Kingdom"/>
+                    android:text="British"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_us"
-                    android:text="United State"/>
+                    android:text="American"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_france"
-                    android:text="France"/>
+                    android:text="French"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_canada"
-                    android:text="Canada"/>
+                    android:text="Canadian"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_jamaica"
-                    android:text="Jamaica"/>
+                    android:text="Jamaican"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_china"
-                    android:text="China"/>
+                    android:text="Chinese"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_netherlands"
-                    android:text="Netherlands"/>
+                    android:text="Dutch"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_egypt"
-                    android:text="Egypt"/>
+                    android:text="Egyptian"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_greece"
-                    android:text="Greece"/>
+                    android:text="Greek"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_india"
-                    android:text="India"/>
+                    android:text="Indian"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_ireland"
-                    android:text="Ireland"/>
+                    android:text="Irish"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_italy"
-                    android:text="Italy"/>
+                    android:text="Italian"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_japan"
-                    android:text="Japan"/>
-                <com.google.android.material.button.MaterialButton
-                    style="@style/chips_group"
-                    android:id="@+id/a_skn"
-                    android:text="Saint Kitts and Nevis"/>
+                    android:text="Japanese"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_malaysia"
-                    android:text="Malaysia"/>
+                    android:text="Malaysian"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_mexico"
-                    android:text="Mexico"/>
+                    android:text="Mexican"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_morocco"
-                    android:text="Morocco"/>
+                    android:text="Moroccan"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_croatia"
-                    android:text="Croatia"/>
+                    android:text="Croatian"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_norway"
-                    android:text="Norway"/>
+                    android:text="Norwegian"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_portugal"
-                    android:text="Portugal"/>
+                    android:text="Portuguese"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_russia"
-                    android:text="Russia"/>
+                    android:text="Russian"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_argentina"
-                    android:text="Argentina"/>
+                    android:text="Argentinian"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_spain"
-                    android:text="Spain"/>
+                    android:text="Spanish"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_slovakia"
-                    android:text="Slovakia"/>
+                    android:text="Slovakian"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_thailand"
-                    android:text="Thailand"/>
+                    android:text="Thai"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_saudi"
-                    android:text="Saudi Arabia"/>
+                    android:text="Saudi Arabian"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_vietnam"
-                    android:text="Vietnam"/>
+                    android:text="Vietnamese"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_turkey"
-                    android:text="Turkey"/>
+                    android:text="Turkish"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_syria"
-                    android:text="Syria"/>
+                    android:text="Syrian"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_algeria"
-                    android:text="Algeria"/>
+                    android:text="Algerian"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_tunisia"
-                    android:text="Tunisia"/>
+                    android:text="Tunisian"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_poland"
-                    android:text="Poland"/>
+                    android:text="Polish"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_philippines"
-                    android:text="Philippines"/>
+                    android:text="Filipino"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_ukraine"
-                    android:text="Ukraine"/>
+                    android:text="Ukrainian"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_uruguay"
-                    android:text="Uruguay"/>
+                    android:text="Uruguayan"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_australia"
-                    android:text="Australia"/>
+                    android:text="Australian"/>
+
+                <com.google.android.material.button.MaterialButton
+                    style="@style/chips_group"
+                    android:id="@+id/a_kenya"
+                    android:text="Kenyan"/>
+
                 <com.google.android.material.button.MaterialButton
                     style="@style/chips_group"
                     android:id="@+id/a_venezuela"
-                    android:text="Venezuela"/>
+                    android:text="Venezulan"/>
 
             </com.google.android.material.chip.ChipGroup>
 
