@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".RecipeDetails">
+
+    <ImageView
+        android:id="@+id/ivHeader"
+        android:layout_width="0dp"
+        android:layout_height="320dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/food3"
+        android:clickable="false"
+        android:focusable="false"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <ImageButton
+        android:id="@+id/btnBack"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="30dp"
+        android:background="@drawable/recipe_detail_icone_rounded"
+        android:backgroundTint="@color/white"
+        android:src="@drawable/ic_arrow_back"
+        android:paddingLeft="5dp"
+        android:scaleType="centerInside"
+        android:clickable="true"
+        android:focusable="true"
+        android:translationZ="20dp"
+        android:foreground="?attr/selectableItemBackgroundBorderless"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/save_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:layout_marginEnd="20dp"
+        android:orientation="horizontal"
+        android:translationZ="20dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageButton
+            android:id="@+id/btnSave"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginStart="12dp"
+            android:background="@drawable/recipe_detail_icone_rounded"
+            android:backgroundTint="@color/white"
+            android:src="@drawable/heart_ic"
+            android:scaleType="centerInside"
+            android:clickable="true"
+            android:focusable="true"
+            android:translationZ="20dp"
+            android:foreground="?attr/selectableItemBackgroundBorderless"/>
+
+    </LinearLayout>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardSheet"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="-40dp"
+
+        app:cardBackgroundColor="@android:color/white"
+        app:strokeWidth="1dp"
+        app:strokeColor="@color/stroke_light"
+
+        app:shapeAppearanceOverlay="@style/TopRoundedCard"
+
+        app:layout_constraintTop_toBottomOf="@id/ivHeader"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            android:padding="20dp"
+            android:clipToPadding="false">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvTag"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="RECIPE DETAIL"
+                    android:textStyle="bold"
+                    android:textSize="12sp"
+                    android:paddingHorizontal="14dp"
+                    android:paddingVertical="8dp"
+                    android:layout_margin="10dp"
+                    android:background="@drawable/bg_orange_circle"
+                    android:textColor="@color/filter_recipe_col" />
+
+                <TextView
+                    android:id="@+id/food_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Corba"
+                    android:textSize="28sp"
+                    android:textStyle="bold"
+                    android:textColor="#0E1A2B"
+                    android:padding="10dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnCooked"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginStart="10dp"
+                    android:text="Mark as Cooked"
+                    android:textAllCaps="false"
+                    android:textColor="@android:color/black"
+                    android:gravity="center"
+
+                    app:backgroundTint="@android:color/white"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="@color/stroke_light"
+                    app:cornerRadius="16dp"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnSaveRecipe"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginStart="10dp"
+                    android:text="Save Recipe"
+                    android:textAllCaps="false"
+                    android:textColor="@android:color/black"
+                    android:gravity="center"
+
+                    app:backgroundTint="@android:color/white"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="#E0E0E0"
+                    app:cornerRadius="16dp"
+
+                    app:icon="@drawable/heart_ic"
+                    app:iconGravity="textStart"
+                    app:iconPadding="8dp"
+                    app:iconTint="@color/black"/>
+
+                <TextView
+                    android:id="@+id/title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="INGREDIENTS LIST"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="#0E1A2B"
+                    android:padding="10dp" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvIngredients"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:padding="4dp"
+                    android:clipToPadding="false"
+                    android:nestedScrollingEnabled="false"
+                    tools:listitem="@layout/activity_item_ingredient"
+                    tools:itemCount="6"/>
+
+                <TextView
+                    android:id="@+id/cookingTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="COOKING STEPS"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="#0E1A2B"
+                    android:layout_marginTop="10dp"
+                    android:padding="10dp"/>
+
+                <View
+                    android:id="@+id/cookingUnderline"
+                    android:layout_width="200dp"
+                    android:layout_height="4dp"
+                    android:layout_marginStart="10dp"
+                    android:background="@color/orange"/>
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvCookingSteps"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:clipToPadding="false"
+                    android:nestedScrollingEnabled="false"
+                    tools:listitem="@layout/item_cooking_step"
+                    tools:itemCount="3"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnCloseRecipe"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="20dp"
+                    android:layout_marginStart="10dp"
+                    android:text="Close Recipe"
+                    android:textAllCaps="false"
+                    android:textColor="@android:color/black"
+                    android:backgroundTint="@color/gray_200"
+                    app:iconGravity="textStart"
+                    app:iconPadding="8dp"
+                    app:iconTint="@android:color/white"
+                    android:clickable="true"
+                    android:gravity="center"/>
+
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+
+    </com.google.android.material.card.MaterialCardView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
