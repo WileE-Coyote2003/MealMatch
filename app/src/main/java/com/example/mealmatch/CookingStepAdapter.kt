@@ -12,7 +12,6 @@ class CookingStepAdapter(
 
     class VH(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvNumber: TextView = itemView.findViewById(R.id.tvStepNumber)
-        val tvTitle: TextView = itemView.findViewById(R.id.tvStepTitle)
         val tvDesc: TextView = itemView.findViewById(R.id.tvStepDesc)
     }
 
@@ -25,7 +24,6 @@ class CookingStepAdapter(
     override fun onBindViewHolder(holder: VH, position: Int) {
         val item = items[position]
         holder.tvNumber.text = item.number.toString()
-        holder.tvTitle.text = item.title
         holder.tvDesc.text = item.desc
     }
 

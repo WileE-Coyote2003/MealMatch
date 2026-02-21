@@ -90,29 +90,40 @@ class RecipeDetails : AppCompatActivity() {
     private fun updateSaveUI(btnSaveRecipe: MaterialButton, btnSaveTop: ImageButton) {
 
         val orange = ContextCompat.getColor(this, R.color.orange)
-        val gray200 = ContextCompat.getColor(this, R.color.gray_200)
+        val strokeLight = Color.parseColor("#E0E0E0") // light border
 
         if (isSaved) {
 
-            // ===== Bottom button =====
+            // ===== Bottom button (Saved) =====
             btnSaveRecipe.text = "Saved"
             btnSaveRecipe.setTextColor(Color.WHITE)
             btnSaveRecipe.backgroundTintList = ColorStateList.valueOf(orange)
             btnSaveRecipe.iconTint = ColorStateList.valueOf(Color.WHITE)
 
-            // ===== Top heart icon =====
+            // remove stroke when saved (optional)
+            btnSaveRecipe.strokeWidth = 0
+
+            // ===== Top heart =====
             btnSaveTop.backgroundTintList = ColorStateList.valueOf(orange)
             btnSaveTop.imageTintList = ColorStateList.valueOf(Color.WHITE)
 
         } else {
 
-            // ===== Bottom button =====
             btnSaveRecipe.text = "Save Recipe"
             btnSaveRecipe.setTextColor(Color.BLACK)
-            btnSaveRecipe.backgroundTintList = ColorStateList.valueOf(gray200)
+
+            // White background
+            btnSaveRecipe.backgroundTintList = ColorStateList.valueOf(Color.WHITE)
+
+            // Light stroke
+            val strokeLight = Color.parseColor("#E0E0E0")
+            val strokeWidthPx = (1 * resources.displayMetrics.density).toInt()
+
+            btnSaveRecipe.strokeWidth = strokeWidthPx
+            btnSaveRecipe.strokeColor = ColorStateList.valueOf(strokeLight)
+
             btnSaveRecipe.iconTint = ColorStateList.valueOf(Color.BLACK)
 
-            // ===== Top heart icon =====
             btnSaveTop.backgroundTintList =
                 ColorStateList.valueOf(ContextCompat.getColor(this, android.R.color.white))
             btnSaveTop.imageTintList = ColorStateList.valueOf(Color.BLACK)

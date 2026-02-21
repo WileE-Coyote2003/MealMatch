@@ -4,15 +4,19 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:paddingStart="16dp"
+    android:paddingEnd="12dp"
     android:paddingTop="18dp"
-    android:paddingBottom="18dp">
+    android:paddingBottom="18dp"
+    android:clipToPadding="false">
 
     <!-- Orange circle number -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardStepNumber"
-        android:layout_width="68dp"
-        android:layout_height="68dp"
-        app:cardCornerRadius="34dp"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_marginStart="4dp"
+        app:cardCornerRadius="30dp"
         app:cardElevation="10dp"
         app:cardUseCompatPadding="true"
         app:cardBackgroundColor="@color/orange"
@@ -30,34 +34,20 @@
             android:textColor="@android:color/white"/>
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- Step title (step 1) -->
-    <TextView
-        android:id="@+id/tvStepTitle"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="18dp"
-        android:text="step 1"
-        android:textStyle="bold"
-        android:textSize="22sp"
-        android:textColor="#2E3542"
-        app:layout_constraintStart_toEndOf="@id/cardStepNumber"
-        app:layout_constraintTop_toTopOf="@id/cardStepNumber"
-        app:layout_constraintEnd_toEndOf="parent"/>
-
-    <!-- Step description -->
+    <!-- Step description ONLY (no "step 1" text) -->
     <TextView
         android:id="@+id/tvStepDesc"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="18dp"
-        android:layout_marginTop="12dp"
         android:text="To make the stock, put the meat, whole onion, bay leaf..."
         android:textSize="20sp"
         android:textStyle="bold"
         android:lineSpacingExtra="6dp"
         android:textColor="#2E3542"
         app:layout_constraintStart_toEndOf="@id/cardStepNumber"
-        app:layout_constraintTop_toBottomOf="@id/tvStepTitle"
+        app:layout_constraintTop_toTopOf="@id/cardStepNumber"
+        app:layout_constraintBottom_toBottomOf="@id/cardStepNumber"
         app:layout_constraintEnd_toEndOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
