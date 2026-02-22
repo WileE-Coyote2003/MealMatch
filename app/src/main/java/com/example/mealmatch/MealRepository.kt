@@ -76,4 +76,18 @@ class MealRepository {
 
         result.distinctBy { it.idMeal }
     }
+
+    suspend fun getMealDetail(id: String): MealDetail? {
+        return try {
+            RetrofitClient.api
+                .getMealDetail(id)
+                .meals
+                ?.firstOrNull()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+
 }

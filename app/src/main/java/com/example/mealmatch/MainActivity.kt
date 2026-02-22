@@ -108,14 +108,22 @@ class MainActivity : AppCompatActivity(), MealFilterBottomSheet.FilterListener {
 
         // Trending RV
         rvTrendingMeals = findViewById(R.id.rvRecommendedMeals)
-        mealAdapter = MealAdapter(mutableListOf()) { /* open detail if you want */ }
+        mealAdapter = MealAdapter(mutableListOf()) { meal ->
+            val intent = Intent(this, RecipeDetails::class.java)
+            intent.putExtra(RecipeDetails.EXTRA_MEAL_ID, meal.idMeal)
+            startActivity(intent)
+        }
         rvTrendingMeals.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         rvTrendingMeals.adapter = mealAdapter
 
         // Search preview RV
         rvSearchResults = findViewById(R.id.rvSearchResults)
-        searchAdapter = SearchMealAdapter(mutableListOf()) { /* open detail if you want */ }
+        searchAdapter = SearchMealAdapter(mutableListOf()) { meal ->
+            val intent = Intent(this, RecipeDetails::class.java)
+            intent.putExtra(RecipeDetails.EXTRA_MEAL_ID, meal.idMeal)
+            startActivity(intent)
+        }
         rvSearchResults.layoutManager = GridLayoutManager(this, 2)
         rvSearchResults.isNestedScrollingEnabled = false
         rvSearchResults.setHasFixedSize(false)
