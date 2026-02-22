@@ -7,7 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
-
+import android.content.Intent
 class SearchResultsActivity : AppCompatActivity() {
 
     companion object {
@@ -48,7 +48,9 @@ class SearchResultsActivity : AppCompatActivity() {
         btnBack.setOnClickListener { finish() }
 
         adapter = SearchMealAdapter(mutableListOf()) { meal ->
-            // TODO: Navigate to detail page using meal.idMeal
+            val intent = Intent(this, RecipeDetails::class.java)
+            intent.putExtra(RecipeDetails.EXTRA_MEAL_ID, meal.idMeal)
+            startActivity(intent)
         }
 
         rvAllResults.layoutManager = GridLayoutManager(this, 2)

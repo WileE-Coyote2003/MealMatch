@@ -14,8 +14,6 @@
         android:layout_height="320dp"
         android:scaleType="centerCrop"
         android:src="@drawable/food3"
-        android:clickable="false"
-        android:focusable="false"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
@@ -29,7 +27,7 @@
         android:background="@drawable/recipe_detail_icone_rounded"
         android:backgroundTint="@color/white"
         android:src="@drawable/ic_arrow_back"
-        android:paddingLeft="5dp"
+        android:paddingLeft="6dp"
         android:scaleType="centerInside"
         android:clickable="true"
         android:focusable="true"
@@ -50,6 +48,21 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageButton
+            android:id="@+id/btnCooked"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginStart="12dp"
+            android:background="@drawable/recipe_detail_icone_rounded"
+            android:backgroundTint="@color/white"
+            android:paddingTop="5dp"
+            android:src="@drawable/correct_circle"
+            android:scaleType="centerInside"
+            android:clickable="true"
+            android:focusable="true"
+            android:translationZ="20dp"
+            android:foreground="?attr/selectableItemBackgroundBorderless"/>
+
+        <ImageButton
             android:id="@+id/btnSave"
             android:layout_width="50dp"
             android:layout_height="50dp"
@@ -62,7 +75,6 @@
             android:focusable="true"
             android:translationZ="20dp"
             android:foreground="?attr/selectableItemBackgroundBorderless"/>
-
     </LinearLayout>
 
     <com.google.android.material.card.MaterialCardView
@@ -70,13 +82,10 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginTop="-40dp"
-
         app:cardBackgroundColor="@android:color/white"
-        app:strokeWidth="1dp"
-        app:strokeColor="@color/stroke_light"
-
-        app:shapeAppearanceOverlay="@style/TopRoundedCard"
-
+        app:cardCornerRadius="28dp"
+        app:cardElevation="0dp"
+        app:cardUseCompatPadding="true"
         app:layout_constraintTop_toBottomOf="@id/ivHeader"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -87,13 +96,15 @@
             android:layout_height="match_parent"
             android:fillViewport="true"
             android:padding="20dp"
-            android:clipToPadding="false">
+            android:clipToPadding="false"
+            android:clipChildren="false">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
+                <!-- ✅ RECIPE DETAIL TAG -->
                 <TextView
                     android:id="@+id/tvTag"
                     android:layout_width="wrap_content"
@@ -107,18 +118,21 @@
                     android:background="@drawable/bg_orange_circle"
                     android:textColor="@color/filter_recipe_col" />
 
+                <!-- ✅ Title -->
                 <TextView
                     android:id="@+id/food_title"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Corba"
+                    android:text="Recipe Name"
                     android:textSize="28sp"
                     android:textStyle="bold"
                     android:textColor="#0E1A2B"
+                    android:layout_marginTop="4dp"
                     android:padding="10dp" />
 
+                <!-- ✅ COOKED BUTTON (NO ICON) -->
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnCooked"
+                    android:id="@+id/btnCookedRecipe"
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
                     android:layout_marginTop="10dp"
@@ -126,64 +140,63 @@
                     android:text="Mark as Cooked"
                     android:textAllCaps="false"
                     android:textColor="@android:color/black"
-                    android:gravity="center"
-
                     app:backgroundTint="@android:color/white"
                     app:strokeWidth="1dp"
-                    app:strokeColor="@color/stroke_light"
-                    app:cornerRadius="16dp"/>
+                    app:strokeColor="#E0E0E0"
+                    android:gravity="center"/>
 
+                <!-- ✅ SAVE BUTTON (WITH HEART ICON) -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnSaveRecipe"
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
-                    android:layout_marginTop="5dp"
+                    android:layout_marginTop="8dp"
                     android:layout_marginStart="10dp"
                     android:text="Save Recipe"
                     android:textAllCaps="false"
                     android:textColor="@android:color/black"
-                    android:gravity="center"
-
                     app:backgroundTint="@android:color/white"
                     app:strokeWidth="1dp"
                     app:strokeColor="#E0E0E0"
-                    app:cornerRadius="16dp"
-
                     app:icon="@drawable/heart_ic"
                     app:iconGravity="textStart"
                     app:iconPadding="8dp"
-                    app:iconTint="@color/black"/>
+                    app:iconTint="@color/black"
+                    android:gravity="center"/>
 
+                <!-- ✅ Ingredients title -->
                 <TextView
                     android:id="@+id/title"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="INGREDIENTS LIST"
-                    android:textSize="20sp"
+                    android:textSize="28sp"
                     android:textStyle="bold"
                     android:textColor="#0E1A2B"
+                    android:layout_marginTop="16dp"
                     android:padding="10dp" />
 
+                <!-- ✅ Ingredients RecyclerView -->
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvIngredients"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:padding="4dp"
                     android:clipToPadding="false"
                     android:nestedScrollingEnabled="false"
                     tools:listitem="@layout/activity_item_ingredient"
                     tools:itemCount="6"/>
 
+                <!-- ✅ Cooking Steps title -->
                 <TextView
                     android:id="@+id/cookingTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="COOKING STEPS"
-                    android:textSize="20sp"
+                    android:textSize="28sp"
                     android:textStyle="bold"
                     android:textColor="#0E1A2B"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="24dp"
                     android:padding="10dp"/>
 
                 <View
@@ -193,30 +206,47 @@
                     android:layout_marginStart="10dp"
                     android:background="@color/orange"/>
 
+                <!-- ✅ Steps RecyclerView (no clipping for circles) -->
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvCookingSteps"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="12dp"
                     android:clipToPadding="false"
+                    android:clipChildren="false"
                     android:nestedScrollingEnabled="false"
                     tools:listitem="@layout/item_cooking_step"
                     tools:itemCount="3"/>
+
+                <!-- ✅ Close -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnShowVideo"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="20dp"
+                    android:layout_marginStart="10dp"
+                    android:text="Watch Video"
+                    android:textAllCaps="false"
+                    android:textColor="@android:color/white"
+                    app:backgroundTint="#FF6900"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="#E0E0E0"
+                    android:gravity="center"/>
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnCloseRecipe"
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
-                    android:layout_marginTop="20dp"
+                    android:layout_marginTop="10dp"
                     android:layout_marginStart="10dp"
                     android:text="Close Recipe"
                     android:textAllCaps="false"
                     android:textColor="@android:color/black"
-                    android:backgroundTint="@color/gray_200"
-                    app:iconGravity="textStart"
-                    app:iconPadding="8dp"
-                    app:iconTint="@android:color/white"
-                    android:clickable="true"
+                    app:backgroundTint="@android:color/white"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="#E0E0E0"
                     android:gravity="center"/>
 
             </LinearLayout>

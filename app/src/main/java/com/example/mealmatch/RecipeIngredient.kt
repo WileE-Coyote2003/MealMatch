@@ -1,6 +1,7 @@
 package com.example.mealmatch
+
 data class RecipeIngredient(
     val name: String,
-    val measure: String,
-    val imageRes: Int
+    val amount: String,
+    val imageRes: Int? = null
 )

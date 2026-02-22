@@ -1,25 +1,42 @@
 package com.example.mealmatch
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
 class RecipeIngredientAdapter(
     private val items: List<RecipeIngredient>
-) : RecyclerView.Adapter<RecipeIngredientViewHolder>() {
+) : RecyclerView.Adapter<RecipeIngredientAdapter.VH>() {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecipeIngredientViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.activity_item_ingredient, parent, false)
-        return RecipeIngredientViewHolder(view)
+    class VH(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val img: ImageView = itemView.findViewById(R.id.ivIngredient)
+        val name: TextView = itemView.findViewById(R.id.tvName)
+        val amount: TextView = itemView.findViewById(R.id.tvMeasure)
     }
 
-    override fun onBindViewHolder(holder: RecipeIngredientViewHolder, position: Int) {
-        val item = items[position]
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
+        val v = LayoutInflater.from(parent.context)
+            .inflate(R.layout.activity_item_ingredient, parent, false)
+        return VH(v)
+    }
 
+    override fun onBindViewHolder(holder: VH, position: Int) {
+        val item = items[position]
         holder.name.text = item.name
-        holder.measure.text = item.measure
-        holder.img.setImageResource(item.imageRes)
+        holder.amount.text = item.amount
+
+        // ✅ No crash when imageRes is null
+        val res = item.imageRes
+        if (res != null) {
+            holder.img.visibility = View.VISIBLE
+            holder.img.setImageResource(res)
+        } else {
+            // You can hide it OR show a placeholder.
+            holder.img.visibility = View.GONE
+        }
     }
 
     override fun getItemCount(): Int = items.size

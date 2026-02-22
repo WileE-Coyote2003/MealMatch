@@ -7,6 +7,9 @@ interface MealApiService {
     @GET("api/json/v2/65232507/randomselection.php")
     suspend fun getRandomMeals(): MealResponse
 
+    @GET("api/json/v2/65232507/random.php")
+    suspend fun getSingleRandomMeals(): MealResponse
+
     // Search by meal name
     @GET("api/json/v2/65232507/search.php")
     suspend fun searchByMealName(@Query("s") name: String): MealResponse
@@ -27,5 +30,6 @@ interface MealApiService {
     @GET("api/json/v2/65232507/filter.php")
     suspend fun filterByArea(@Query("a") area: String): MealFilterResponse
 
-
+    @GET("api/json/v2/65232507/lookup.php")
+    suspend fun getMealDetail(@Query("i") id: String): MealDetailResponse
 }

@@ -7,12 +7,12 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
 class CookingStepAdapter(
-    private val items: List<CookingSteps>
+    private val steps: List<CookingSteps>
 ) : RecyclerView.Adapter<CookingStepAdapter.VH>() {
 
     class VH(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val tvNumber: TextView = itemView.findViewById(R.id.tvStepNumber)
-        val tvDesc: TextView = itemView.findViewById(R.id.tvStepDesc)
+        val number: TextView = itemView.findViewById(R.id.tvStepNumber)
+        val desc: TextView = itemView.findViewById(R.id.tvStepDesc)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
@@ -22,10 +22,11 @@ class CookingStepAdapter(
     }
 
     override fun onBindViewHolder(holder: VH, position: Int) {
-        val item = items[position]
-        holder.tvNumber.text = item.number.toString()
-        holder.tvDesc.text = item.desc
+        val step = steps[position]
+        holder.number.text = step.stepNumber.toString()
+        holder.desc.text = step.description
+
     }
 
-    override fun getItemCount(): Int = items.size
+    override fun getItemCount(): Int = steps.size
 }

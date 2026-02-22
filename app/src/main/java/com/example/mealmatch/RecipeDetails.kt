@@ -1,132 +1,265 @@
 package com.example.mealmatch
 
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
 import android.widget.ImageButton
 import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.google.android.material.button.MaterialButton
+import kotlinx.coroutines.launch
 
 class RecipeDetails : AppCompatActivity() {
 
+    companion object {
+        const val EXTRA_MEAL_ID = "extra_meal_id"
+    }
+
     private var isSaved = false
+    private var isCooked = false
+
+    private val repo = MealRepository()
+
+    private var youtubeUrl: String = ""
+
+    // Views we will reuse
+    private lateinit var btnSaveTop: ImageButton
+    private lateinit var btnCookedTop: ImageButton
+    private lateinit var btnSaveRecipe: MaterialButton
+    private lateinit var btnCookedRecipe: MaterialButton
+    private lateinit var btnShowVideo: MaterialButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_recipe_details)
 
-        val root = findViewById<android.view.View?>(R.id.main)
-        if (root != null) {
-            ViewCompat.setOnApplyWindowInsetsListener(root) { v, insets ->
-                val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-                insets
-            }
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
         }
 
+        val mealId = intent.getStringExtra(EXTRA_MEAL_ID)
+        if (mealId.isNullOrBlank()) {
+            finish()
+            return
+        }
+
+        setupButtons()
+        loadMealDetail(mealId)
+    }
+
+    private fun setupButtons() {
         val btnBack = findViewById<ImageButton>(R.id.btnBack)
         val saveContainer = findViewById<LinearLayout>(R.id.save_btn)
-        val btnSaveTop = findViewById<ImageButton>(R.id.btnSave)
-        val btnSaveRecipe = findViewById<MaterialButton>(R.id.btnSaveRecipe)
+        val btnClose = findViewById<MaterialButton>(R.id.btnCloseRecipe)
+
+        btnSaveTop = findViewById(R.id.btnSave)
+        btnCookedTop = findViewById(R.id.btnCooked)
+
+        btnSaveRecipe = findViewById(R.id.btnSaveRecipe)
+        btnCookedRecipe = findViewById(R.id.btnCookedRecipe)
+
+        btnShowVideo = findViewById(R.id.btnShowVideo)
 
         btnBack.bringToFront()
         saveContainer.bringToFront()
 
         btnBack.setOnClickListener { finish() }
+        btnClose.setOnClickListener { finish() }
 
-        // Initial state
+        // initial UI
         updateSaveUI(btnSaveRecipe, btnSaveTop)
+        updateCookedUI(btnCookedRecipe, btnCookedTop)
 
-        // Toggle from top heart
+        // SAVE toggles
         btnSaveTop.setOnClickListener {
             isSaved = !isSaved
             updateSaveUI(btnSaveRecipe, btnSaveTop)
         }
-
-        // Toggle from bottom button
         btnSaveRecipe.setOnClickListener {
             isSaved = !isSaved
             updateSaveUI(btnSaveRecipe, btnSaveTop)
         }
 
-        // Ingredients
-        val rv = findViewById<RecyclerView>(R.id.rvIngredients)
-        rv.layoutManager = GridLayoutManager(this, 2)
-        rv.isNestedScrollingEnabled = false
+        // COOKED toggles
+        btnCookedTop.setOnClickListener {
+            isCooked = !isCooked
+            updateCookedUI(btnCookedRecipe, btnCookedTop)
+        }
+        btnCookedRecipe.setOnClickListener {
+            isCooked = !isCooked
+            updateCookedUI(btnCookedRecipe, btnCookedTop)
+        }
 
-        val items = listOf(
-            RecipeIngredient("Beef Shin", "1KG", R.drawable.food3),
-            RecipeIngredient("Onion", "1", R.drawable.food2),
-            RecipeIngredient("Potato", "2", R.drawable.food12),
-            RecipeIngredient("Bay Leaf", "3", R.drawable.food3),
-        )
-        rv.adapter = RecipeIngredientAdapter(items)
-
-        // Steps
-        val rvSteps = findViewById<RecyclerView>(R.id.rvCookingSteps)
-        rvSteps.layoutManager = LinearLayoutManager(this)
-        rvSteps.isNestedScrollingEnabled = false
-
-        val steps = listOf(
-            CookingSteps(1, "step 1", "To make the stock, put the meat, whole onion, bay leaf..."),
-            CookingSteps(2, "step 2", "Cook over a very low heat for 1 hr 30 mins..."),
-            CookingSteps(3, "step 3", "Skim off the scum with a spoon...")
-        )
-        rvSteps.adapter = CookingStepAdapter(steps)
-
-        val btnClose = findViewById<MaterialButton>(R.id.btnCloseRecipe)
-        btnClose.setOnClickListener { finish() }
+        // VIDEO (will be enabled/disabled after API loads)
+        btnShowVideo.isEnabled = false
+        btnShowVideo.alpha = 0.4f
+        btnShowVideo.setOnClickListener {
+            if (youtubeUrl.isBlank()) return@setOnClickListener
+            openUrl(youtubeUrl)
+        }
     }
 
-    private fun updateSaveUI(btnSaveRecipe: MaterialButton, btnSaveTop: ImageButton) {
+    private fun loadMealDetail(mealId: String) {
+        lifecycleScope.launch {
+            val meal = repo.getMealDetail(mealId) ?: return@launch
 
+            findViewById<TextView>(R.id.food_title).text = meal.strMeal
+
+            Glide.with(this@RecipeDetails)
+                .load(meal.strMealThumb)
+                .into(findViewById(R.id.ivHeader))
+
+            // ========================
+            // YOUTUBE
+            // ========================
+            youtubeUrl = meal.strYoutube?.trim().orEmpty()
+            btnShowVideo.isEnabled = youtubeUrl.isNotBlank()
+            btnShowVideo.alpha = if (youtubeUrl.isNotBlank()) 1f else 0.4f
+
+            // ========================
+            // INGREDIENTS
+            // ========================
+            val ingredients = mutableListOf<RecipeIngredient>()
+            for (i in 1..20) {
+                val ingredient = meal.getIngredient(i)?.trim()
+                val measure = meal.getMeasure(i)?.trim().orEmpty()
+
+                if (!ingredient.isNullOrBlank()) {
+                    ingredients.add(
+                        RecipeIngredient(
+                            name = ingredient,
+                            amount = measure,
+                            imageRes = null
+                        )
+                    )
+                }
+            }
+
+            val rvIngredients = findViewById<RecyclerView>(R.id.rvIngredients)
+            rvIngredients.layoutManager = GridLayoutManager(this@RecipeDetails, 2)
+            rvIngredients.isNestedScrollingEnabled = false
+            rvIngredients.adapter = RecipeIngredientAdapter(ingredients)
+
+            // ========================
+            // STEPS (remove "Step 1" lines & prefix)
+            // ========================
+            val rawLines = meal.strInstructions
+                .orEmpty()
+                .split("\r\n", "\n")
+                .map { it.trim() }
+                .filter { it.isNotBlank() }
+
+            val withoutStepOnlyLines = rawLines.filterNot { line ->
+                line.matches(Regex("^step\\s*\\d+\\s*[:.]*$", RegexOption.IGNORE_CASE))
+            }
+
+            val cleanedLines = withoutStepOnlyLines
+                .map { line ->
+                    line.replace(
+                        Regex("^step\\s*\\d+\\s*[:.\\-]*\\s*", RegexOption.IGNORE_CASE),
+                        ""
+                    ).trim()
+                }
+                .filter { it.isNotBlank() }
+
+            val steps = cleanedLines.mapIndexed { index, text ->
+                CookingSteps(index + 1, "", text)
+            }
+
+            val rvSteps = findViewById<RecyclerView>(R.id.rvCookingSteps)
+            rvSteps.layoutManager = LinearLayoutManager(this@RecipeDetails)
+            rvSteps.isNestedScrollingEnabled = false
+            rvSteps.adapter = CookingStepAdapter(steps)
+        }
+    }
+
+    private fun openUrl(url: String) {
+        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+    }
+
+    // ===============================
+    // SAVE UI
+    // ===============================
+    private fun updateSaveUI(btnSaveRecipe: MaterialButton, btnSaveTop: ImageButton) {
         val orange = ContextCompat.getColor(this, R.color.orange)
-        val strokeLight = Color.parseColor("#E0E0E0") // light border
 
         if (isSaved) {
-
-            // ===== Bottom button (Saved) =====
             btnSaveRecipe.text = "Saved"
             btnSaveRecipe.setTextColor(Color.WHITE)
             btnSaveRecipe.backgroundTintList = ColorStateList.valueOf(orange)
             btnSaveRecipe.iconTint = ColorStateList.valueOf(Color.WHITE)
-
-            // remove stroke when saved (optional)
             btnSaveRecipe.strokeWidth = 0
 
-            // ===== Top heart =====
             btnSaveTop.backgroundTintList = ColorStateList.valueOf(orange)
             btnSaveTop.imageTintList = ColorStateList.valueOf(Color.WHITE)
 
         } else {
-
             btnSaveRecipe.text = "Save Recipe"
             btnSaveRecipe.setTextColor(Color.BLACK)
-
-            // White background
             btnSaveRecipe.backgroundTintList = ColorStateList.valueOf(Color.WHITE)
 
-            // Light stroke
-            val strokeLight = Color.parseColor("#E0E0E0")
             val strokeWidthPx = (1 * resources.displayMetrics.density).toInt()
-
             btnSaveRecipe.strokeWidth = strokeWidthPx
-            btnSaveRecipe.strokeColor = ColorStateList.valueOf(strokeLight)
-
+            btnSaveRecipe.strokeColor = ColorStateList.valueOf(Color.parseColor("#E0E0E0"))
             btnSaveRecipe.iconTint = ColorStateList.valueOf(Color.BLACK)
 
             btnSaveTop.backgroundTintList =
                 ColorStateList.valueOf(ContextCompat.getColor(this, android.R.color.white))
             btnSaveTop.imageTintList = ColorStateList.valueOf(Color.BLACK)
+        }
+    }
+
+    // ===============================
+    // COOKED UI (your requested style)
+    // Before: black bg + white text
+    // After : green text + green bg 20% + green stroke 20%
+    // Top icon after: green bg + white icon
+    // ===============================
+    private fun updateCookedUI(btnCookedRecipe: MaterialButton, btnCookedTop: ImageButton) {
+        val green = Color.parseColor("#22C55E")
+        val green20 = Color.argb(
+            51, // 20% opacity
+            Color.red(green),
+            Color.green(green),
+            Color.blue(green)
+        )
+
+        val strokeWidthPx = (1 * resources.displayMetrics.density).toInt()
+
+        if (isCooked) {
+            btnCookedRecipe.text = "Cooked"
+            btnCookedRecipe.setTextColor(green)
+            btnCookedRecipe.backgroundTintList = ColorStateList.valueOf(green20)
+            btnCookedRecipe.strokeWidth = strokeWidthPx
+            btnCookedRecipe.strokeColor = ColorStateList.valueOf(green20)
+
+            btnCookedTop.backgroundTintList = ColorStateList.valueOf(green)
+            btnCookedTop.imageTintList = ColorStateList.valueOf(Color.WHITE)
+
+        } else {
+            btnCookedRecipe.text = "Mark as Cooked"
+            btnCookedRecipe.setTextColor(Color.WHITE)
+            btnCookedRecipe.backgroundTintList = ColorStateList.valueOf(Color.BLACK)
+            btnCookedRecipe.strokeWidth = 0
+
+            btnCookedTop.backgroundTintList =
+                ColorStateList.valueOf(ContextCompat.getColor(this, android.R.color.white))
+            btnCookedTop.imageTintList = ColorStateList.valueOf(Color.BLACK)
         }
     }
 }
