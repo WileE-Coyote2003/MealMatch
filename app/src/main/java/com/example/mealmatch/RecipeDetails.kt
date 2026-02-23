@@ -20,6 +20,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.launch
+private val auth by lazy { com.google.firebase.auth.FirebaseAuth.getInstance() }
+private val db by lazy { com.google.firebase.firestore.FirebaseFirestore.getInstance() }
+
+private var currentMealId: String = ""
 
 class RecipeDetails : AppCompatActivity() {
 
@@ -46,6 +50,7 @@ class RecipeDetails : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_recipe_details)
 
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
@@ -57,6 +62,7 @@ class RecipeDetails : AppCompatActivity() {
             finish()
             return
         }
+        currentMealId = mealId
 
         setupButtons()
         loadMealDetail(mealId)
@@ -87,22 +93,24 @@ class RecipeDetails : AppCompatActivity() {
 
         // SAVE toggles
         btnSaveTop.setOnClickListener {
-            isSaved = !isSaved
-            updateSaveUI(btnSaveRecipe, btnSaveTop)
+            if (!requireLogin()) return@setOnClickListener
+            toggleSaved()
         }
+
         btnSaveRecipe.setOnClickListener {
-            isSaved = !isSaved
-            updateSaveUI(btnSaveRecipe, btnSaveTop)
+            if (!requireLogin()) return@setOnClickListener
+            toggleSaved()
         }
 
         // COOKED toggles
         btnCookedTop.setOnClickListener {
-            isCooked = !isCooked
-            updateCookedUI(btnCookedRecipe, btnCookedTop)
+            if (!requireLogin()) return@setOnClickListener
+            toggleCooked()
         }
+
         btnCookedRecipe.setOnClickListener {
-            isCooked = !isCooked
-            updateCookedUI(btnCookedRecipe, btnCookedTop)
+            if (!requireLogin()) return@setOnClickListener
+            toggleCooked()
         }
 
         // VIDEO (will be enabled/disabled after API loads)
@@ -144,7 +152,6 @@ class RecipeDetails : AppCompatActivity() {
                         RecipeIngredient(
                             name = ingredient,
                             amount = measure,
-                            imageRes = null
                         )
                     )
                 }
@@ -260,6 +267,65 @@ class RecipeDetails : AppCompatActivity() {
             btnCookedTop.backgroundTintList =
                 ColorStateList.valueOf(ContextCompat.getColor(this, android.R.color.white))
             btnCookedTop.imageTintList = ColorStateList.valueOf(Color.BLACK)
+        }
+    }
+    private fun requireLogin(): Boolean {
+        if (auth.currentUser == null) {
+            android.widget.Toast.makeText(
+                this,
+                "Please login to use this feature",
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
+
+            startActivity(Intent(this, LoginActivity::class.java))
+            return false
+        }
+        return true
+    }
+
+    private fun toggleSaved() {
+        val user = auth.currentUser ?: return
+        val docRef = db.collection("users")
+            .document(user.uid)
+            .collection("saved")
+            .document(currentMealId)
+
+        if (isSaved) {
+            // remove from saved
+            docRef.delete()
+            isSaved = false
+            updateSaveUI(btnSaveRecipe, btnSaveTop)
+        } else {
+            // save meal
+            val data = mapOf(
+                "mealId" to currentMealId,
+                "timestamp" to System.currentTimeMillis()
+            )
+            docRef.set(data)
+            isSaved = true
+            updateSaveUI(btnSaveRecipe, btnSaveTop)
+        }
+    }
+
+    private fun toggleCooked() {
+        val user = auth.currentUser ?: return
+        val docRef = db.collection("users")
+            .document(user.uid)
+            .collection("cooked")
+            .document(currentMealId)
+
+        if (isCooked) {
+            docRef.delete()
+            isCooked = false
+            updateCookedUI(btnCookedRecipe, btnCookedTop)
+        } else {
+            val data = mapOf(
+                "mealId" to currentMealId,
+                "timestamp" to System.currentTimeMillis()
+            )
+            docRef.set(data)
+            isCooked = true
+            updateCookedUI(btnCookedRecipe, btnCookedTop)
         }
     }
 }
