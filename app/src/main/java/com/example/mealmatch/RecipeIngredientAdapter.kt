@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.squareup.picasso.Picasso
 
 class RecipeIngredientAdapter(
     private val items: List<RecipeIngredient>
@@ -25,18 +26,17 @@ class RecipeIngredientAdapter(
 
     override fun onBindViewHolder(holder: VH, position: Int) {
         val item = items[position]
+
         holder.name.text = item.name
         holder.amount.text = item.amount
 
-        // ✅ No crash when imageRes is null
-        val res = item.imageRes
-        if (res != null) {
-            holder.img.visibility = View.VISIBLE
-            holder.img.setImageResource(res)
-        } else {
-            // You can hide it OR show a placeholder.
-            holder.img.visibility = View.GONE
-        }
+        holder.img.visibility = View.VISIBLE
+
+        Picasso.get()
+            .load(ImageUtils.ingredientImageUrl(item.name))
+            .fit()
+            .centerInside()
+            .into(holder.img)
     }
 
     override fun getItemCount(): Int = items.size
