@@ -6,6 +6,11 @@
         android:icon="@android:drawable/btn_star_big_on" />
 
     <item
+        android:id="@+id/menu_cooking_history"
+        android:title="Cooking History"
+        android:icon="@android:drawable/ic_menu_recent_history" />
+
+    <item
         android:id="@+id/menu_logout"
         android:title="Logout"
         android:icon="@android:drawable/ic_lock_power_off" />

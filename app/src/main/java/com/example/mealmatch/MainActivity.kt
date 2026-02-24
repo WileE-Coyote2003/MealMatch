@@ -195,6 +195,11 @@ class MainActivity : AppCompatActivity(), MealFilterBottomSheet.FilterListener {
                     drawerLayout.closeDrawer(GravityCompat.END)
                     true
                 }
+                R.id.menu_cooking_history -> {
+                    startActivity(Intent(this, CookingHistoryActivity::class.java))
+                    drawerLayout.closeDrawer(GravityCompat.END)
+                    true
+                }
 
                 R.id.menu_logout -> {
                     auth.signOut()
@@ -206,6 +211,7 @@ class MainActivity : AppCompatActivity(), MealFilterBottomSheet.FilterListener {
                     header.findViewById<TextView>(R.id.drawerEmail).text = ""
                     true
                 }
+
 
                 else -> false
             }
