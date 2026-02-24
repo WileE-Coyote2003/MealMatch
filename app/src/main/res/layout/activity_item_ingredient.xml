@@ -31,8 +31,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scaleType="fitCenter"
-                android:padding="10dp"
-                android:src="@drawable/food3"/>
+                android:padding="10dp"/>
         </com.google.android.material.card.MaterialCardView>
 
         <TextView

@@ -20,10 +20,15 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.launch
+import android.widget.Toast
+import kotlinx.coroutines.tasks.await
+import com.google.firebase.firestore.FieldValue
 private val auth by lazy { com.google.firebase.auth.FirebaseAuth.getInstance() }
 private val db by lazy { com.google.firebase.firestore.FirebaseFirestore.getInstance() }
 
 private var currentMealId: String = ""
+private var currentMealName: String = ""
+private var currentMealThumb: String = ""
 
 class RecipeDetails : AppCompatActivity() {
 
@@ -65,6 +70,7 @@ class RecipeDetails : AppCompatActivity() {
         currentMealId = mealId
 
         setupButtons()
+        loadSavedCookedState()
         loadMealDetail(mealId)
     }
 
@@ -126,10 +132,15 @@ class RecipeDetails : AppCompatActivity() {
         lifecycleScope.launch {
             val meal = repo.getMealDetail(mealId) ?: return@launch
 
-            findViewById<TextView>(R.id.food_title).text = meal.strMeal
+            // ✅ Store meal info for Firestore save
+            currentMealName = meal.strMeal.orEmpty()
+            currentMealThumb = meal.strMealThumb.orEmpty()
+
+            // ✅ Use stored name
+            findViewById<TextView>(R.id.food_title).text = currentMealName
 
             Glide.with(this@RecipeDetails)
-                .load(meal.strMealThumb)
+                .load(currentMealThumb)
                 .into(findViewById(R.id.ivHeader))
 
             // ========================
@@ -151,7 +162,7 @@ class RecipeDetails : AppCompatActivity() {
                     ingredients.add(
                         RecipeIngredient(
                             name = ingredient,
-                            amount = measure,
+                            amount = measure
                         )
                     )
                 }
@@ -163,7 +174,7 @@ class RecipeDetails : AppCompatActivity() {
             rvIngredients.adapter = RecipeIngredientAdapter(ingredients)
 
             // ========================
-            // STEPS (remove "Step 1" lines & prefix)
+            // STEPS
             // ========================
             val rawLines = meal.strInstructions
                 .orEmpty()
@@ -285,30 +296,45 @@ class RecipeDetails : AppCompatActivity() {
 
     private fun toggleSaved() {
         val user = auth.currentUser ?: return
+
         val docRef = db.collection("users")
             .document(user.uid)
             .collection("saved")
             .document(currentMealId)
 
-        if (isSaved) {
-            // remove from saved
-            docRef.delete()
-            isSaved = false
-            updateSaveUI(btnSaveRecipe, btnSaveTop)
-        } else {
-            // save meal
-            val data = mapOf(
-                "mealId" to currentMealId,
-                "timestamp" to System.currentTimeMillis()
-            )
-            docRef.set(data)
-            isSaved = true
-            updateSaveUI(btnSaveRecipe, btnSaveTop)
+        lifecycleScope.launch {
+            try {
+                if (isSaved) {
+                    docRef.delete().await()
+                    isSaved = false
+                    updateSaveUI(btnSaveRecipe, btnSaveTop)
+                    Toast.makeText(this@RecipeDetails, "Removed from Saved", Toast.LENGTH_SHORT).show()
+                } else {
+                    val data = hashMapOf(
+                        "mealId" to currentMealId,
+                        "name" to currentMealName,
+                        "thumb" to currentMealThumb,
+                        "savedAt" to FieldValue.serverTimestamp()
+                    )
+
+                    docRef.set(data).await()
+                    isSaved = true
+                    updateSaveUI(btnSaveRecipe, btnSaveTop)
+                    Toast.makeText(this@RecipeDetails, "Saved!", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(
+                    this@RecipeDetails,
+                    "Save failed: ${e.message}",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
         }
     }
 
     private fun toggleCooked() {
         val user = auth.currentUser ?: return
+
         val docRef = db.collection("users")
             .document(user.uid)
             .collection("cooked")
@@ -316,16 +342,51 @@ class RecipeDetails : AppCompatActivity() {
 
         if (isCooked) {
             docRef.delete()
-            isCooked = false
-            updateCookedUI(btnCookedRecipe, btnCookedTop)
+                .addOnSuccessListener {
+                    isCooked = false
+                    updateCookedUI(btnCookedRecipe, btnCookedTop)
+                }
         } else {
-            val data = mapOf(
+            val data = hashMapOf(
                 "mealId" to currentMealId,
-                "timestamp" to System.currentTimeMillis()
+                "name" to currentMealName,
+                "thumb" to currentMealThumb,
+                "cookedAt" to com.google.firebase.firestore.FieldValue.serverTimestamp()
             )
+
             docRef.set(data)
-            isCooked = true
-            updateCookedUI(btnCookedRecipe, btnCookedTop)
+                .addOnSuccessListener {
+                    isCooked = true
+                    updateCookedUI(btnCookedRecipe, btnCookedTop)
+                }
         }
+    }
+
+    private fun loadSavedCookedState() {
+        val user = auth.currentUser ?: run {
+            isSaved = false
+            isCooked = false
+            updateSaveUI(btnSaveRecipe, btnSaveTop)
+            updateCookedUI(btnCookedRecipe, btnCookedTop)
+            return
+        }
+
+        // Saved?
+        db.collection("users").document(user.uid)
+            .collection("saved").document(currentMealId)
+            .get()
+            .addOnSuccessListener { doc ->
+                isSaved = doc.exists()
+                updateSaveUI(btnSaveRecipe, btnSaveTop)
+            }
+
+        // Cooked?
+        db.collection("users").document(user.uid)
+            .collection("cooked").document(currentMealId)
+            .get()
+            .addOnSuccessListener { doc ->
+                isCooked = doc.exists()
+                updateCookedUI(btnCookedRecipe, btnCookedTop)
+            }
     }
 }

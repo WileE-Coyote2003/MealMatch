@@ -2,7 +2,6 @@ package com.example.mealmatch
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -13,7 +12,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 
-class FavoritesActivity : AppCompatActivity() {
+class CookingHistoryActivity : AppCompatActivity() {
 
     private val auth by lazy { FirebaseAuth.getInstance() }
     private val db by lazy { FirebaseFirestore.getInstance() }
@@ -33,9 +32,8 @@ class FavoritesActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_favorites)
+        setContentView(R.layout.activity_favorites) // reuse same layout
 
-        // ✅ Match XML IDs exactly
         btnBack = findViewById(R.id.btnBack)
         rv = findViewById(R.id.rvAllResults)
         btnPrev = findViewById(R.id.btnPrev)
@@ -43,7 +41,7 @@ class FavoritesActivity : AppCompatActivity() {
         tvPage = findViewById(R.id.tvPage)
         tvTitle = findViewById(R.id.tvResultsTitle)
 
-        tvTitle.text = "Saved Recipes"
+        tvTitle.text = "Cooking History"
 
         btnBack.setOnClickListener { finish() }
 
@@ -76,16 +74,12 @@ class FavoritesActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
 
-        val user = auth.currentUser
-        if (user == null) {
-            finish()
-            return
-        }
+        val user = auth.currentUser ?: return
 
         db.collection("users")
             .document(user.uid)
-            .collection("saved")
-            .orderBy("savedAt", Query.Direction.DESCENDING)
+            .collection("cooked")   // 🔥 important: cooked collection
+            .orderBy("cookedAt", Query.Direction.DESCENDING)
             .addSnapshotListener { snap, _ ->
 
                 val list = mutableListOf<Meal>()
@@ -111,7 +105,7 @@ class FavoritesActivity : AppCompatActivity() {
                 allMeals = list
                 currentPage = 1
 
-                tvTitle.text = "Saved Recipes (${allMeals.size})"
+                tvTitle.text = "Cooking History (${allMeals.size})"
 
                 renderPage()
             }
