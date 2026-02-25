@@ -23,9 +23,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.imageview.ShapeableImageView
 import com.google.android.material.navigation.NavigationView
+import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -80,6 +82,25 @@ class MainActivity : AppCompatActivity(), MealFilterBottomSheet.FilterListener {
 
     private val HOME_PREVIEW_LIMIT = 6
 
+    // Drawer score UI
+    private lateinit var tvCookedCount: TextView
+    private lateinit var tvNextLevel: TextView
+    private lateinit var tvProgressText: TextView
+    private lateinit var progressCooking: LinearProgressIndicator
+
+    private var cookedListener: ListenerRegistration? = null
+
+    data class ChefLevel(val name: String, val min: Int, val max: Int) // inclusive range
+
+    private val levels = listOf(
+        ChefLevel("Kitchen Newbie", 0, 4),
+        ChefLevel("Beginner Chef", 5, 14),
+        ChefLevel("Home Cook", 15, 29),
+        ChefLevel("Skilled Chef", 30, 59),
+        ChefLevel("Master Chef", 60, 99),
+        ChefLevel("Legendary Chef", 100, Int.MAX_VALUE)
+    )
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -89,6 +110,19 @@ class MainActivity : AppCompatActivity(), MealFilterBottomSheet.FilterListener {
         // Drawer
         drawerLayout = findViewById(R.id.drawerLayout)
         rightDrawer = findViewById(R.id.rightDrawer)
+
+        // IMPORTANT: Only start Firestore listener when drawer is OPEN
+        drawerLayout.addDrawerListener(object : DrawerLayout.SimpleDrawerListener() {
+            override fun onDrawerOpened(drawerView: View) {
+                val user = auth.currentUser ?: return
+                loadDrawerUserInfo()              // updates header + starts cooked listener
+            }
+
+            override fun onDrawerClosed(drawerView: View) {
+                cookedListener?.remove()
+                cookedListener = null
+            }
+        })
 
         // Navbar
         topNavbar = findViewById(R.id.topnavbar)
@@ -176,7 +210,8 @@ class MainActivity : AppCompatActivity(), MealFilterBottomSheet.FilterListener {
         // Profile (drawer)
         profileBtn.setOnClickListener {
             drawerLayout.openDrawer(GravityCompat.END)
-            loadDrawerUserInfo()
+            // DO NOT call loadDrawerUserInfo() here (avoid blocking before open).
+            // DrawerListener will call it when drawer is opened.
         }
 
         // Filter button
@@ -195,6 +230,7 @@ class MainActivity : AppCompatActivity(), MealFilterBottomSheet.FilterListener {
                     drawerLayout.closeDrawer(GravityCompat.END)
                     true
                 }
+
                 R.id.menu_cooking_history -> {
                     startActivity(Intent(this, CookingHistoryActivity::class.java))
                     drawerLayout.closeDrawer(GravityCompat.END)
@@ -211,7 +247,6 @@ class MainActivity : AppCompatActivity(), MealFilterBottomSheet.FilterListener {
                     header.findViewById<TextView>(R.id.drawerEmail).text = ""
                     true
                 }
-
 
                 else -> false
             }
@@ -241,6 +276,12 @@ class MainActivity : AppCompatActivity(), MealFilterBottomSheet.FilterListener {
     override fun onStart() {
         super.onStart()
         updateTopBar()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        cookedListener?.remove()
+        cookedListener = null
     }
 
     // =========================
@@ -335,8 +376,6 @@ class MainActivity : AppCompatActivity(), MealFilterBottomSheet.FilterListener {
     private fun runAlphaSearch(letter: String) {
         val q = letter.trim()
         if (q.isBlank()) return
-
-        // This triggers normal search flow too (good UX)
         searchEditText.setText(q)
     }
 
@@ -346,8 +385,6 @@ class MainActivity : AppCompatActivity(), MealFilterBottomSheet.FilterListener {
     private fun runIngredientSearch(ingredientName: String) {
         val q = ingredientName.trim()
         if (q.isBlank()) return
-
-        // This triggers normal search flow too (good UX)
         searchEditText.setText(q)
     }
 
@@ -397,6 +434,11 @@ class MainActivity : AppCompatActivity(), MealFilterBottomSheet.FilterListener {
         val nameTv = header.findViewById<TextView>(R.id.drawerName)
         val emailTv = header.findViewById<TextView>(R.id.drawerEmail)
 
+        tvCookedCount = header.findViewById(R.id.tvCookedCount)
+        tvNextLevel = header.findViewById(R.id.tvNextLevel)
+        tvProgressText = header.findViewById(R.id.tvProgressText)
+        progressCooking = header.findViewById(R.id.progressCooking)
+
         emailTv.text = user.email ?: "No email"
 
         db.collection("users").document(user.uid).get()
@@ -406,6 +448,8 @@ class MainActivity : AppCompatActivity(), MealFilterBottomSheet.FilterListener {
             .addOnFailureListener {
                 nameTv.text = "User"
             }
+
+        startCookedScoreListener(user.uid)
     }
 
     override fun onBackPressed() {
@@ -458,6 +502,63 @@ class MainActivity : AppCompatActivity(), MealFilterBottomSheet.FilterListener {
             profileBtn.strokeColor = ColorStateList.valueOf(Color.WHITE)
             profileBtn.strokeWidth = dpToPx(1).toFloat()
         }
+    }
+
+    private fun computeLevel(cookedCount: Int): Triple<String, String, Int> {
+        val idx = levels.indexOfFirst { cookedCount in it.min..it.max }.coerceAtLeast(0)
+        val current = levels[idx]
+
+        val isLast = idx == levels.lastIndex
+        if (isLast) {
+            return Triple(current.name, "Max level reached", 100)
+        }
+
+        val next = levels[idx + 1]
+        val needTotal = next.min - current.min
+        val have = (cookedCount - current.min).coerceAtLeast(0)
+        val percent = ((have.toFloat() / needTotal.toFloat()) * 100f).toInt().coerceIn(0, 100)
+
+        val progressText = "${cookedCount}/${next.min}"
+        return Triple(current.name, "Next: ${next.name} ($progressText)", percent)
+    }
+
+    private fun startCookedScoreListener(uid: String) {
+        cookedListener?.remove()
+
+        cookedListener = db.collection("users")
+            .document(uid)
+            .collection("cooked")
+            .addSnapshotListener { snap, e ->
+                if (e != null) {
+                    android.widget.Toast.makeText(
+                        this,
+                        "Cooked read failed: ${e.message}",
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
+                    return@addSnapshotListener
+                }
+
+                val cookedCount = snap?.documents?.size ?: 0
+                updateDrawerScoreUI(cookedCount)
+            }
+    }
+
+    private fun updateDrawerScoreUI(cookedCount: Int) {
+        tvCookedCount.text = cookedCount.toString()
+
+        val (currentLevel, nextText, percent) = computeLevel(cookedCount)
+
+        if (nextText.startsWith("Next:") && nextText.contains("(") && nextText.contains(")")) {
+            val main = nextText.substringBefore("(").trim()
+            val inside = nextText.substringAfter("(").substringBefore(")").trim()
+            tvNextLevel.text = main
+            tvProgressText.text = inside
+        } else {
+            tvNextLevel.text = currentLevel
+            tvProgressText.text = ""
+        }
+
+        progressCooking.progress = percent
     }
 
     private fun dpToPx(dp: Int): Int {
