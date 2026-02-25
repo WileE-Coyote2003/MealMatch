@@ -9,29 +9,46 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.FirebaseApp
+import com.google.firebase.auth.FirebaseAuth
 
 class LoginActivity : AppCompatActivity() {
+
+    private lateinit var auth: FirebaseAuth
+    private var isPasswordVisible = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-        val signUpText = findViewById<TextView>(R.id.sign_in_text) // "Sign Up"
+        // Firebase
+        FirebaseApp.initializeApp(this)
+        auth = FirebaseAuth.getInstance()
+
+        // Views
+        val signUpText = findViewById<TextView>(R.id.sign_up_text)
         val loginBtn = findViewById<Button>(R.id.login_btn)
         val backText = findViewById<TextView>(R.id.back_text)
 
         val emailBox = findViewById<EditText>(R.id.email_box)
         val passwordBox = findViewById<EditText>(R.id.password_box)
-
         val eyeBtn = findViewById<ImageView>(R.id.eye_btn)
+
+        // ---- Go to SignUpActivity ----
+        signUpText.isClickable = true
+        signUpText.isFocusable = true
+        signUpText.bringToFront()
+
         signUpText.setOnClickListener {
             startActivity(Intent(this, SignUpActivity::class.java))
         }
 
+        // ---- Back to MainActivity ----
         backText.setOnClickListener {
             finish()
         }
 
+        // ---- Login with Firebase ----
         loginBtn.setOnClickListener {
             val email = emailBox.text.toString().trim()
             val password = passwordBox.text.toString().trim()
@@ -48,32 +65,39 @@ class LoginActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show()
+            loginBtn.isEnabled = false
 
-            // Example after real login:
-            // startActivity(Intent(this, HomeActivity::class.java))
-            // finish()
+            auth.signInWithEmailAndPassword(email, password)
+                .addOnSuccessListener {
+                    Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show()
+
+                    val intent = Intent(this, MainActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    }
+                    startActivity(intent)
+                }
+                .addOnFailureListener { e ->
+                    loginBtn.isEnabled = true
+                    Toast.makeText(this, e.message ?: "Login failed", Toast.LENGTH_LONG).show()
+                }
         }
 
-        var isPasswordVisible = false
+        // ---- Password visibility toggle ----
         eyeBtn.setImageResource(R.drawable.eye_ic)
 
         eyeBtn.setOnClickListener {
             isPasswordVisible = !isPasswordVisible
 
             if (isPasswordVisible) {
-                // Show password + show "eye" icon
                 passwordBox.inputType =
                     InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
                 eyeBtn.setImageResource(R.drawable.ic_eye_off)
             } else {
-                // Hide password + show "eye-off" icon
                 passwordBox.inputType =
                     InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
                 eyeBtn.setImageResource(R.drawable.eye_ic)
             }
 
-            // keep cursor at end
             passwordBox.setSelection(passwordBox.text.length)
         }
     }
